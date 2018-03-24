@@ -62,7 +62,7 @@ function compileStatements(lines) {
 function compileRoom(statement, compiled) {
 	if(!statement.children) errorAndExit("Empty 'room' statement", statement);
 
-	let roomName = capture(statement.text, /'(.*)'/);
+	let roomName = capture(statement.text, /called\W+'(.*)'/);
 	if(!roomName) errorAndExit("Room has no name", statement);
 
 	let newRoom = {};

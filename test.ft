@@ -1,4 +1,4 @@
-room called 'Ball Room'
+room called     'Ball Room'
 	do
 		if command is 'look'
 			say

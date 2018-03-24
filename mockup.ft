@@ -1,0 +1,21 @@
+variable named 'fire' is 'false'
+
+thing named 'matches' 
+	is in 'front_hall'
+	do
+		if 'matches' is in '#here'
+			if '#command' is 'look'
+				say 'There's a box of matches here'
+	
+
+place named 'front_hall'
+	do
+		if '#command' is 'look'
+			if $fire$ is 'false'
+				say
+					'You are standing'
+					'in the {front hall|front_hall} of your home.'
+			if $fire$ is 'true'
+				say
+					'You are standing in the charred'
+					'remains of your {front hall|front_hall}.'
