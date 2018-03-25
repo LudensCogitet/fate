@@ -1,21 +1,52 @@
-variable named 'fire' is 'false'
-
-thing named 'matches' 
-	is in 'front_hall'
+thing named `_cube` is in `cube_room` looks like `A small black cube`
 	do
-		if 'matches' is in '#here'
-			if '#command' is 'look'
-				say 'There's a box of matches here'
-	
+		if `#command` is `look _cube`
+			say `It's a small matte black {cube|_cube}, perfectly smooth and about 2 inches on a side`
 
-place named 'front_hall'
+variable named `cube_in_pedestal` is `false`
+
+place named `pedestal_room`
 	do
-		if '#command' is 'look'
-			if $fire$ is 'false'
-				say
-					'You are standing'
-					'in the {front hall|front_hall} of your home.'
-			if $fire$ is 'true'
-				say
-					'You are standing in the charred'
-					'remains of your {front hall|front_hall}.'
+		if `#command` is `north`
+			travel to `cube_room`
+
+		if `#command` is `south`
+			if $cube_in_pedestal$ is `true`
+				travel to `you_win`
+
+		if `#command` is `look pedestal_room`
+			say
+				`You are standing in a small circular room with bare white walls.`
+				if $cube_in_pedestal$ is `false`
+					`In the center of the room is a small, waist-high pedestal with a square depression in the center.`
+				if $cube_in_pedestal$ is `true`
+					`In the center of the room is a small, waist-high pedestal. A matte black cube sits in a square depression in the center.`
+				`To the north a doorway leads into another small room beyond.`
+
+		if `#command` is `_cube pedestal`
+			if $cube_in_pedestal$ is `false`
+				if `#player` has `_cube`
+					say
+						`You place the {cube|_cube} in the depression on the pedestal.`
+						`It slides in easily and clicks into place.`
+
+place named `cube_room`
+	do
+		if `_cube` is in `#here`
+			if `#command` is `look cube_room`
+				say `A small black cube sits in an alcove in this otherwise featureless room.`
+
+			if `#command` is `take cube`
+				say `You take the {cube|_cube}.`
+				move `_cube` to `#player`
+
+		if `_cube` is not in `#here`
+			say `An empty alcove is the only notable feature of this otherwise featureless room.`
+
+
+place named `you_win`
+	do
+		if `#command` is `look you_win`
+			say `YOU WIN!`
+		if `#command` is `north`
+			travel to `pedestal_room`

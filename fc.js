@@ -1,8 +1,8 @@
 let fs = require('fs');
 let util = require('util');
 
-function capture(text, regex) {
-	let match = text.match(regex);
+function captureExpression(text, symbol) {
+	let match = text.match(new RegExp(`${symbol}\\W\\\`(.*)\\\``));
 	return match && match.length > 1 ? match[1] : null;
 }
 
@@ -21,14 +21,6 @@ function validateFilePath(sourceFile) {
 	}
 }
 
-function removeEmptyLines(lines) {
-	for(let i = 0; i < lines.length; i++) {
-		if(!lines[i]) lines.splice(i, 1);
-	}
-
-	return lines;
-}
-
 function assignLayers(lines) {
 	let statements = [];
 	for(let line of lines) {
@@ -42,10 +34,12 @@ function assignLayers(lines) {
 	return statements;
 }
 
-function compileStatements(lines) {
+function groupStatements(lines) {
 	let statements = [];
 	let currentObject;
-	lines.forEach((line, i) => {
+	assignLayers(lines).forEach((line, i) => {
+		if(!line.text) return;
+
 		if(line.layer === 0) {
 			currentObject = {text: line.text, line: i}
 			statements.push(currentObject);
@@ -59,32 +53,44 @@ function compileStatements(lines) {
 	return statements;
 }
 
-function compileRoom(statement, compiled) {
-	if(!statement.children) errorAndExit("Empty 'room' statement", statement);
+function compilePlace(statement, compiled) {
+	if(!statement.children) errorAndExit("Empty 'place' statement", statement);
 
-	let roomName = capture(statement.text, /called\W+'(.*)'/);
-	if(!roomName) errorAndExit("Room has no name", statement);
+	let placeName = captureExpression(statement.text, 'named');
+	if(!placeName) errorAndExit("place has no name", statement);
 
-	let newRoom = {};
+	let newPlace = {};
 
 	statement.children.forEach(child => {
-		compileStatement(child, newRoom);
+		compileStatement(child, newPlace);
 	});
 
-	if(!compiled.rooms) compiled.rooms = {};
-	compiled.rooms[roomName] = newRoom;
+	if(!compiled.places) compiled.places = {};
+	compiled.places[placeName] = newPlace;
 }
 
 function compileDo(statement, compiled) {
 	if(!statement.children) errorAndExit("Empty 'do' statement", statement);
 
 	if(!compiled.do) compiled.do = []
-	compiled.do.push(statement.children);
+
+	statement.children.forEach(child => {
+		compiled.do.push(compileStatement(child, compiled));
+	})
 }
 
+function compileIf(statement, compiled) {}
+
+function compileThing(statement, compiled) {}
+
+function compileVariable(statement, compiled) {}
+
 let compile = {
-	"room": compileRoom,
-	"do":		compileDo
+	"place": 		compilePlace,
+	"do":				compileDo,
+	"if":				compileIf,
+	"thing":		compileThing,
+	"variable": compileVariable
 }
 
 function compileStatement(statement, compiled) {
@@ -102,14 +108,14 @@ function compileStatement(statement, compiled) {
 	validateFilePath(sourceFile);
 
 	let source = fs.readFileSync(sourceFile, 'utf8');
-	let grouped = compileStatements(assignLayers(removeEmptyLines(source.split('\n'))));
+	let grouped = groupStatements(source.split('\n'));
 	let compiled = {};
 
 	for(let statement of grouped) {
 		compileStatement(statement, compiled);
 	}
 
-	console.log(compiled)
+	console.log(util.inspect(compiled, false, 20));
 
 	process.exit(0);
 })();
