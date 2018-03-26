@@ -36,17 +36,17 @@ function assignLayers(lines) {
 
 function groupStatements(lines) {
 	let statements = [];
-	let currentObject;
+	let currentObjects = [null];
 	assignLayers(lines).forEach((line, i) => {
 		if(!line.text) return;
 
 		if(line.layer === 0) {
-			currentObject = {text: line.text, line: i}
-			statements.push(currentObject);
+			currentObjects[0] = {text: line.text, line: i}
+			statements.push(currentObjects[0]);
 		} else {
 			let newObject = {text: line.text, line: i};
-			currentObject.children ? currentObject.children.push(newObject) : currentObject.children = [newObject];
-			currentObject = newObject;
+			currentObjects[line.layer] = newObject;
+			currentObjects[line.layer - 1].children ? currentObjects[line.layer - 1].children.push(newObject) : currentObjects[line.layer - 1].children = [newObject];
 		}
 	});
 
@@ -114,7 +114,7 @@ function compileStatement(statement, compiled) {
 	let source = fs.readFileSync(sourceFile, 'utf8');
 	let grouped = groupStatements(source.split('\n'));
 	let compiled = {};
-console.log(grouped);
+	console.log(util.inspect(grouped, false, 20));
 	for(let statement of grouped) {
 		compileStatement(statement, compiled);
 	}
