@@ -73,7 +73,7 @@ function compileDo(statement, compiled) {
 	if(!statement.children) errorAndExit("Empty 'do' statement", statement);
 
     compiled.do = []
-
+	console.log(statement.children.length);
 	statement.children.forEach(child => {
 		let newCommand = {};
 		compileStatement(child, newCommand);
@@ -82,7 +82,7 @@ function compileDo(statement, compiled) {
 }
 
 function compileIf(statement, compiled) {
-	return true;
+	compiled.if = true;
 }
 
 function compileThing(statement, compiled) {}
@@ -114,7 +114,7 @@ function compileStatement(statement, compiled) {
 	let source = fs.readFileSync(sourceFile, 'utf8');
 	let grouped = groupStatements(source.split('\n'));
 	let compiled = {};
-
+console.log(grouped);
 	for(let statement of grouped) {
 		compileStatement(statement, compiled);
 	}
