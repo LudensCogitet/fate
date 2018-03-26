@@ -75,11 +75,15 @@ function compileDo(statement, compiled) {
     compiled.do = []
 
 	statement.children.forEach(child => {
-		compiled.do.push(compileStatement(child, {}));
+		let newCommand = {};
+		compileStatement(child, newCommand);
+		compiled.do.push(newCommand);
 	})
 }
 
-function compileIf(statement, compiled) {}
+function compileIf(statement, compiled) {
+	return true;
+}
 
 function compileThing(statement, compiled) {}
 
