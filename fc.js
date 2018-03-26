@@ -2,8 +2,12 @@ let fs = require('fs');
 let util = require('util');
 
 function captureExpression(text, symbol) {
-	let match = text.match(new RegExp(`${symbol}\\W\\\`(.*)\\\``));
-	return match && match.length > 1 ? match[1] : null;
+	let match = text.match(new RegExp(`${symbol}\\W\\\`(.*?)\\\``));
+	if(match && match.length > 1) return { value: match[1] };
+
+	match = text.match(new RegExp(`${symbol}\\W\\\$(.*?)\\\$`));
+
+	return match && match.length > 1 ? { variable: match[1] } : null;
 }
 
 function errorAndExit(error, statement = null) {
@@ -57,7 +61,7 @@ function compilePlace(statement, compiled) {
 	if(!statement.children) errorAndExit("Empty 'place' statement", statement);
 
 	let placeName = captureExpression(statement.text, 'named');
-	if(!placeName) errorAndExit("place has no name", statement);
+	if(!placeName || placeName.variable) errorAndExit("Place must be named and name must not be a variable", statement);
 
 	let newPlace = {};
 
@@ -66,14 +70,14 @@ function compilePlace(statement, compiled) {
 	});
 
 	if(!compiled.places) compiled.places = {};
-	compiled.places[placeName] = newPlace;
+	compiled.places[placeName.value] = newPlace;
 }
 
 function compileDo(statement, compiled) {
 	if(!statement.children) errorAndExit("Empty 'do' statement", statement);
 
-    compiled.do = []
-	console.log(statement.children.length);
+	compiled.do = []
+
 	statement.children.forEach(child => {
 		let newCommand = {};
 		compileStatement(child, newCommand);
@@ -82,19 +86,62 @@ function compileDo(statement, compiled) {
 }
 
 function compileIf(statement, compiled) {
-	compiled.if = true;
+	if(!statement.children || statement.children.length > 1) errorAndExit(`'If' statements must have one (and no more than one) child.`, statement);
+
+	let comparisons = {
+		"is": "eq",
+		"is not": "neq",
+		"is in": "in",
+		"is not in": "nin",
+		"has": "in",											// converted to in with operands flipped
+		"does not have": "nin"						// converted to nin with operands flipped
+	}
+
+	let leftHandOperand = captureExpression(statement.text, 'if');
+
+	if(!leftHandOperand) errorAndExit(`No left hand operand in 'if' statement.`, statement);
+
+	let rightHandOperand;
+	let operator;
+	Object.keys(comparisons).some(key => {
+		rightHandOperand = captureExpression(statement.text, key);
+		if(rightHandOperand) operator = key;
+		return rightHandOperand;
+	});
+
+	if(!rightHandOperand) errorAndExit(`Missing right hand operand or invalid operator in 'if' statement.`, statement);
+
+	if(operator === 'has' || operator === 'does not have') {
+		let temp = leftHandOperand;
+		leftHandOperand = rightHandOperand;
+		rightHandOperand = temp;
+	}
+
+	compiled.if = {};
+	compiled.then = {};
+	compiled.if[comparisons[operator]] = [leftHandOperand, rightHandOperand];
+	compileStatement(statement.children[0], compiled.then);
 }
 
 function compileThing(statement, compiled) {}
 
 function compileVariable(statement, compiled) {}
 
+function compileTravel(statement, compiled) {}
+
+function compileSay(statement, compiled) {}
+
+function compileMove(statement, compiled) {}
+
 let compile = {
 	"place": 		compilePlace,
 	"do":				compileDo,
 	"if":				compileIf,
 	"thing":		compileThing,
-	"variable": compileVariable
+	"variable": compileVariable,
+	"travel":		compileTravel,
+	"say":			compileSay,
+	"move":			compileMove
 }
 
 function compileStatement(statement, compiled) {
@@ -114,12 +161,12 @@ function compileStatement(statement, compiled) {
 	let source = fs.readFileSync(sourceFile, 'utf8');
 	let grouped = groupStatements(source.split('\n'));
 	let compiled = {};
-	console.log(util.inspect(grouped, false, 20));
+
 	for(let statement of grouped) {
 		compileStatement(statement, compiled);
 	}
 
-	console.log(util.inspect(compiled, false, 20));
-
+	//console.log(util.inspect(compiled, false, 20));
+	console.log(JSON.stringify(compiled));
 	process.exit(0);
 })();

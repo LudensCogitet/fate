@@ -38,8 +38,9 @@ place named `cube_room`
 					say `A small black cube sits in an alcove in this otherwise featureless room.`
 
 				if `#command` is `take cube`
-					say `You take the {cube|_cube}.`
-					move `_cube` to `#player`
+					do
+						say `You take the {cube|_cube}.`
+						move `_cube` to `#player`
 
 		if `_cube` is not in `#here`
 			do
