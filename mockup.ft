@@ -33,15 +33,17 @@ place named `pedestal_room`
 place named `cube_room`
 	do
 		if `_cube` is in `#here`
-			if `#command` is `look cube_room`
-				say `A small black cube sits in an alcove in this otherwise featureless room.`
+			do
+				if `#command` is `look cube_room`
+					say `A small black cube sits in an alcove in this otherwise featureless room.`
 
-			if `#command` is `take cube`
-				say `You take the {cube|_cube}.`
-				move `_cube` to `#player`
+				if `#command` is `take cube`
+					say `You take the {cube|_cube}.`
+					move `_cube` to `#player`
 
 		if `_cube` is not in `#here`
-			say `An empty alcove is the only notable feature of this otherwise featureless room.`
+			do
+				say `An empty alcove is the only notable feature of this otherwise featureless room.`
 
 
 place named `you_win`

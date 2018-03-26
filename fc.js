@@ -72,10 +72,10 @@ function compilePlace(statement, compiled) {
 function compileDo(statement, compiled) {
 	if(!statement.children) errorAndExit("Empty 'do' statement", statement);
 
-	if(!compiled.do) compiled.do = []
+    compiled.do = []
 
 	statement.children.forEach(child => {
-		compiled.do.push(compileStatement(child, compiled));
+		compiled.do.push(compileStatement(child, {}));
 	})
 }
 
