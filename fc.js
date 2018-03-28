@@ -73,6 +73,31 @@ function compilePlace(statement, compiled) {
 	compiled.places[placeName.value] = newPlace;
 }
 
+function compileThing(statement, compiled) {
+	if(!statement.children) errorAndExit("Empty 'thing' statement", statement);
+
+	let thingName = captureExpression(statement.text, 'named');
+	if(!thingName || thingName.variable) errorAndExit("Thing must be named and name must not be a variable", statement);
+
+	let thingLocation = captureExpression(statement.text, 'is in');
+	if(!thingLocation || thingLocation.variable) errorAndExit("Thing must have a location and location must not be a variable", statement);
+
+	let thingDescription = captureExpression(statement.text, 'looks like');
+	if(!thingDescription || thingDescription.variable) errorAndExit("Thing must have a description and description must not be a variable", statement);
+
+	let newThing = {
+		location: thingLocation.value,
+		description: thingDescription.value
+	};
+
+	statement.children.forEach(child => {
+		compileStatement(child, newThing);
+	});
+
+	if(!compiled.things) compiled.things = {};
+	compiled.things[thingName.value] = newThing;
+}
+
 function compileDo(statement, compiled) {
 	if(!statement.children) errorAndExit("Empty 'do' statement", statement);
 
@@ -122,8 +147,6 @@ function compileIf(statement, compiled) {
 	compiled.if[comparisons[operator]] = [leftHandOperand, rightHandOperand];
 	compileStatement(statement.children[0], compiled.then);
 }
-
-function compileThing(statement, compiled) {}
 
 function compileVariable(statement, compiled) {}
 
