@@ -1,13 +1,29 @@
 let fs = require('fs');
 let util = require('util');
 
-function captureExpression(text, symbol) {
-	let match = text.match(new RegExp(`${symbol}\\W\\\`(.*?)\\\``));
-	if(match && match.length > 1) return { value: match[1] };
+function captureExpression(text, symbol = '') {
+	let regex = [
+		new RegExp(`${symbol}\\W\\\`(.*?)\\\``),
+		new RegExp(`${symbol}\\W\\\$(.*?)\\\$`),
+		new RegExp("^`(.*?)`"),
+		new RegExp("^\\\$(.*?)\\\$")
+	];
 
-	match = text.match(new RegExp(`${symbol}\\W\\\$(.*?)\\\$`));
+	for(let i = 0; i < regex.length; i++) {
+		let match = text.match(regex[i]);
+		if(match && match.length > 1) {
+			switch(i) {
+				case 0:
+				case 2:
+					return { value: match[1] };
+				case 1:
+				case 3:
+				return { variable: match[1] };
+			}
+		}
+	}
 
-	return match && match.length > 1 ? { variable: match[1] } : null;
+	return null;
 }
 
 function errorAndExit(error, statement = null) {
@@ -107,7 +123,7 @@ function compileDo(statement, compiled) {
 		let newCommand = {};
 		compileStatement(child, newCommand);
 		compiled.do.push(newCommand);
-	})
+	});
 }
 
 function compileIf(statement, compiled) {
@@ -148,13 +164,56 @@ function compileIf(statement, compiled) {
 	compileStatement(statement.children[0], compiled.then);
 }
 
-function compileVariable(statement, compiled) {}
+function compileVariable(statement, compiled) {
+	if(statement.children) errorAndExit(`Variable declarations must not have children`, statement);
 
-function compileTravel(statement, compiled) {}
+	let variableName = captureExpression(statement.text, 'named');
+	if(!variableName || variableName.variable)  errorAndExit("Variable must have a name and name must not be a variable", statement);
 
-function compileSay(statement, compiled) {}
+	let variableValue = captureExpression(statement.text, 'is');
+	if(!variableValue || variableValue.variable)  errorAndExit("Variable must have a value and value cannot be a variable", statement);
 
-function compileMove(statement, compiled) {}
+	if(!compiled.variables) compiled.variables = {};
+	compiled.variables[variableName.value] = variableValue.value;
+}
+
+function compileTravel(statement, compiled) {
+	if(statement.children) errorAndExit(`Travel statements must not have children`, statement);
+
+	let destination = captureExpression(statement.text, 'to');
+	if(!destination)  errorAndExit("Travel statement must have a destination", statement);
+
+	compiled.travel = destination;
+}
+
+function compileSay(statement, compiled) {
+	if(!compiled.say) compiled.say = [];
+
+	let inlineText = captureExpression(statement.text, '');
+
+	if(inlineText) {
+		compiled.say.push(inlineText);
+		return;
+	} else if(!statement.children) {
+		errorAndExit("Empty say statement");
+	}
+
+	statement.children.forEach(child => {
+		let newCommand = {};
+		compileStatement(child, newCommand);
+		compiled.say.push(newCommand);
+	});
+}
+
+function compileMove(statement, compiled) {
+	let thing = captureExpression(statement.text, 'move');
+	if(!thing) errorAndExit("No thing specified to move", statement);
+
+	let destination = captureExpression(statement.text, 'to');
+	if(!destination)  errorAndExit("No destination specified", statement);
+
+	compiled.move = [thing, destination];
+}
 
 let compile = {
 	"place": 		compilePlace,
@@ -171,7 +230,13 @@ function compileStatement(statement, compiled) {
 	let command = statement.text.split(' ').shift();
 
 	if(!compile[command]) {
-		errorAndExit(`Invalid command '${command}'`, statement);
+		if(captureExpression(statement.text)) {
+			compile['say'](statement, compiled);
+			return;
+		}
+		else {
+			errorAndExit(`Invalid command '${command}'`, statement);
+		}
 	}
 
 	compile[command](statement, compiled);
