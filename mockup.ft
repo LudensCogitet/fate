@@ -1,3 +1,5 @@
+#player is in `pedestal_room`
+
 thing named `_cube` is in `cube_room` looks like `A small black cube`
 	do
 		if `#command` is `look _cube`

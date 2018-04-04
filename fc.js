@@ -215,15 +215,38 @@ function compileMove(statement, compiled) {
 	compiled.move = [thing, destination];
 }
 
+function compilePlayer(statement, compiled) {
+	if(statement.children) errorAndExit("Player initialization statements cannot have children");
+
+	let location = captureExpression(statement.text, 'is in');
+	if(!location || location.variable) errorAndExit("Player must be initialized with a location and location cannot be a variable");
+
+	if(!compiled['#player']) compiled['#player'] = {};
+
+	compiled['#player'].location = location.value;
+}
+
+function compileAnywhere(statement, compiled) {
+	if(!statement.children) errorAndExit("Anywhere initialization statement must have children");
+
+	if(!compiled['#anywhere']) compiled['#anywhere'] = {};
+
+	statement.children.forEach(child => {
+		compileStatement(child, compiled['#anywhere']);
+	});
+}
+
 let compile = {
-	"place": 		compilePlace,
-	"do":				compileDo,
-	"if":				compileIf,
-	"thing":		compileThing,
-	"variable": compileVariable,
-	"travel":		compileTravel,
-	"say":			compileSay,
-	"move":			compileMove
+	"place": 			compilePlace,
+	"do":					compileDo,
+	"if":					compileIf,
+	"thing":			compileThing,
+	"variable": 	compileVariable,
+	"travel":			compileTravel,
+	"say":				compileSay,
+	"move":				compileMove,
+	"#player":		compilePlayer,
+	"#anywhere":	compileAnywhere
 }
 
 function compileStatement(statement, compiled) {
@@ -246,6 +269,8 @@ function compileStatement(statement, compiled) {
 	let sourceFile = process.argv[2];
 	validateFilePath(sourceFile);
 
+	let destinationPath = process.argv[3];
+
 	let source = fs.readFileSync(sourceFile, 'utf8');
 	let grouped = groupStatements(source.split('\n'));
 	let compiled = {};
@@ -254,7 +279,15 @@ function compileStatement(statement, compiled) {
 		compileStatement(statement, compiled);
 	}
 
+	if(!compiled['#player']) errorAndExit(`Player must be initialized with a location. E.g. "#player is in \`room_name\`"`);
 	//console.log(util.inspect(compiled, false, 20));
 	console.log(JSON.stringify(compiled));
+
+	if(!destinationPath) {
+		let dateNow = new Date();
+		destinationPath = `./fateWorld_${dateNow.getFullYear()}-${dateNow.getMonth()}-${dateNow.getDate()}.ftw`;
+	}
+
+	fs.writeFileSync(destinationPath, JSON.stringify(compiled));
 	process.exit(0);
 })();
