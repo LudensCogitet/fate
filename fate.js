@@ -1,11 +1,3 @@
-const worldStructure = {
-	'#player': {},
-	'#anywhere': {},
-	'places': {},
-	'things': {},
-	'variables': {}
-}
-
 let pristineWorld;
 let world;
 let started = false;
@@ -119,17 +111,20 @@ function getThingsAtLocation(location) {
 function checkPlayerMoved() {
 	if(!playerMoved) return;
 	playerMoved = false;
-	command = 'look';
+	command = '#enter';
 	process(world.places[world['#player'].location]);
 }
 
 function load(worldString) {
 	pristineWorld = worldString;
-	world = Object.assign({}, worldStructure, JSON.parse(worldString));
+	world = JSON.parse(worldString);
 }
 
 function move(newCommand) {
 	if(!world || !started) return;
+
+	world.variables['#turns'].value = ((+world.variables['#turns'].value) + 1) + '';
+
 	command = newCommand;
 
 	let anywhere				= world['#anywhere'];
@@ -160,7 +155,7 @@ function start() {
 	if(!world) return;
 	started = true;
 
-	return move(`look`);
+	return move(`#enter`);
 }
 
 module.exports = { load, move, start }

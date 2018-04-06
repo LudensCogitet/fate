@@ -3,10 +3,11 @@ let util = require('util');
 
 function captureExpression(text, symbol = '') {
 	let regex = [
-		new RegExp(`${symbol}\\W\\\`(.*?)\\\``),
-		new RegExp(`${symbol}\\W\\\$(.*?)\\\$`),
-		new RegExp("^`(.*?)`"),
-		new RegExp("^\\\$(.*?)\\\$")
+			new RegExp(`${symbol}\\W\\\`(.*?)\\\``),
+			new RegExp(`${symbol}\\W\\\$(.*?)\\\$`),
+			new RegExp("^`(.*?)`"),
+			new RegExp("^\\\$(.*?)\\\$"),
+			new RegExp(`${symbol}\\s(.*?)(\\s|$)`)
 	];
 
 	for(let i = 0; i < regex.length; i++) {
@@ -15,10 +16,11 @@ function captureExpression(text, symbol = '') {
 			switch(i) {
 				case 0:
 				case 2:
+				case 4:
 					return { value: match[1] };
 				case 1:
 				case 3:
-				return { variable: match[1] };
+					return { variable: match[1] };
 			}
 		}
 	}
@@ -129,12 +131,12 @@ function compileDo(statement, compiled) {
 function compileComparison(command, statement) {
 	let {text} = statement;
 	let comparisons = {
-		"is": "eq",
+		"is not in": "nin",
 		"is not": "neq",
 		"is in": "in",
-		"is not in": "nin",
-		"has": "in",											// converted to in with operands flipped
-		"does not have": "nin"						// converted to nin with operands flipped
+		"is": "eq",
+		"does not have": "nin",						// converted to nin with operands flipped
+		"has": "in"											// converted to in with operands flipped
 	}
 
 	let leftHandOperand = captureExpression(statement.text, command);
@@ -215,13 +217,13 @@ function compileTravel(statement, compiled) {
 function compileSay(statement, compiled) {
 	if(!compiled.say) compiled.say = [];
 
-	let inlineText = captureExpression(statement.text, '');
+	let inlineText = captureExpression(statement.text);
 
 	if(inlineText) {
 		compiled.say.push(inlineText);
 		return;
 	} else if(!statement.children) {
-		errorAndExit("Empty say statement");
+		errorAndExit("Empty say statement", statement);
 	}
 
 	statement.children.forEach(child => {
@@ -304,6 +306,14 @@ function compileStatement(statement, compiled) {
 	compile[command](statement, compiled);
 }
 
+const worldStructure = {
+	'#player': {},
+	'#anywhere': {},
+	'places': {},
+	'things': {},
+	'variables': {}
+};
+
 (() => {
 	let sourceFile = process.argv[2];
 	validateFilePath(sourceFile);
@@ -319,7 +329,11 @@ function compileStatement(statement, compiled) {
 	}
 
 	if(!compiled['#player']) errorAndExit(`Player must be initialized with a location. E.g. "#player is in \`room_name\`"`);
-	//console.log(util.inspect(compiled, false, 20));
+
+	compiled = Object.assign({}, worldStructure, compiled);
+
+	compiled.variables['#turns'] = {value: '-1'};
+
 	console.log(JSON.stringify(compiled));
 
 	if(!destinationPath) {

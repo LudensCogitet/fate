@@ -1,64 +1,78 @@
-#player is in `pedestal_room`
+#player is in pedestal_room
 
-thing named `_cube` is in `cube_room` looks like `A small black cube`
+#anywhere
+	if $#turns$ is 5
+		do
+			say `It's been 5 turns`
+
+thing named _cube is in cube_room looks like `A small black {cube|_cube}`
 	do
-		if `#command` is `look _cube`
+		if #command is `look _cube`
 			say `It's a small matte black {cube|_cube}, perfectly smooth and about 2 inches on a side`
 
-variable named `cube_in_pedestal` is `false`
+variable named cube_in_pedestal is false
 
-place named `pedestal_room`
+place named pedestal_room
 	do
-		if `#command` is `north`
-			or `#command` is `bacon`
+		if #command is north
+			or #command is `Go to the other room`
 			then
-				travel to `cube_room`
+				travel to cube_room
 
-		if `#command` is `south`
-			if $cube_in_pedestal$ is `true`
-				travel to `you_win`
+		if #command is south
+			if $cube_in_pedestal$ is true
+				travel to you_win
 
-		if `#command` is `look`
-			say
-				`You are standing in a small circular room with bare white walls.`
-				if $cube_in_pedestal$ is `false`
-					`In the center of the room is a small, waist-high pedestal with a square depression in the center.`
-				if $cube_in_pedestal$ is `true`
-					`In the center of the room is a small, waist-high pedestal. A matte black cube sits in a square depression in the center.`
-				`To the north a doorway leads into another small room beyond.`
+		if #command is look
+			or #command is #enter
+			then
+				say
+					`You are standing in a small circular room with bare white walls.`
+					if $cube_in_pedestal$ is false
+						`In the center of the room is a small, waist-high pedestal with a square depression in the center.`
+					if $cube_in_pedestal$ is true
+						`In the center of the room is a small, waist-high pedestal. A matte black {cube|_cube} sits in a square depression in the center.`
+					`To the north a doorway leads into another small room beyond.`
 
-		if `#command` is `_cube pedestal`
-			if $cube_in_pedestal$ is `false`
-				if `#player` has `_cube`
+		if #command is `_cube pedestal`
+			if $cube_in_pedestal$ is false
+				if #player has _cube
 					do
 						say
 							`You place the {cube|_cube} in the depression on the pedestal.`
 							`It slides in easily and clicks into place.`
-							set `cube_in_pedestal` to `true`
+							set cube_in_pedestal to true
+							move _cube to #here
 
-place named `cube_room`
+place named cube_room
 	do
-		if `#command` is `south`
-			travel to `pedestal_room`
-		if `_cube` is in `#here`
+		if #command is south
+			travel to pedestal_room
+		if _cube is in #here
 			do
-				if `#command` is `look`
-					say `A small black cube sits in an alcove in this otherwise featureless room.`
+				if #command is look
+					or #command is #enter
+					then
+						say `A small black {cube|_cube} sits in an alcove in this otherwise featureless room.`
 
-				if `#command` is `take cube`
+				if #command is `take _cube`
 					do
 						say `You take the {cube|_cube}.`
-						move `_cube` to `#player`
+						move _cube to #player
 
-		if `_cube` is not in `#here`
-			if `#command` is `look`
-				do
+		if _cube is not in #here
+			if #command is look
+				or #command is #enter
+				then
 					say `An empty alcove is the only notable feature of this otherwise featureless room.`
 
 
-place named `you_win`
+place named you_win
 	do
-		if `#command` is `look`
-			say `YOU WIN!`
-		if `#command` is `north`
-			travel to `pedestal_room`
+		if #command is look
+			or #command is #enter
+			then
+				say `YOU WIN!`
+
+		if #command is north
+			travel to pedestal_room
