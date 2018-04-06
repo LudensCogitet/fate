@@ -1,5 +1,3 @@
-let fs = require('fs');
-
 const worldStructure = {
 	'#player': {},
 	'#anywhere': {},
@@ -14,6 +12,7 @@ let started = false;
 
 let command;
 let response = [];
+let playerMoved = false;
 
 function resolveOperand(operand) {
 	if(!operand.hasOwnProperty('value') && !operand.hasOwnProperty('variable')) return false;
@@ -46,8 +45,7 @@ function processDo(subject) {
 function processTravel(subject) {
 	let newLocation = resolveOperand(subject);
 	world['#player'].location = newLocation;
-	command = `look ${newLocation}`;
-	process(world.places[newLocation]);
+	playerMoved = true;
 }
 
 function processSay(subject) {
@@ -61,11 +59,26 @@ function processSay(subject) {
 	});
 }
 
+function processMove(subject) {
+	let thing = resolveOperand(subject[0]);
+	let destination = resolveOperand(subject[1]);
+
+	if(thing === '#player')
+		world[thing].location = destination;
+	else
+	 	world.things[thing].location = destination;
+}
+
+function processSet(subject) {
+	world.variables[resolveOperand(subject[0])] = subject[1];
+}
+
 function process(subject) {
 	let actions = {
 		"travel": processTravel,
 		"say": processSay,
-		//"move": processMove
+		"move": processMove,
+		"set": processSet
 	};
 
 	if(subject.do)
@@ -87,12 +100,19 @@ function getThingsAtLocation(location) {
 
 	let thingNames = Object.keys(world.things);
 
-	thingNames.forEach(thing => {
+	for(let thing of thingNames) {
 		if(world.things[thing].location === location)
-			thingsAtlocation.push(thing);
-	});
+			thingsAtLocation.push(thing);
+	}
 
 	return thingsAtLocation;
+}
+
+function checkPlayerMoved() {
+	if(!playerMoved) return;
+	playerMoved = false;
+	command = 'look';
+	process(world.places[world['#player'].location]);
 }
 
 function load(worldString) {
@@ -119,25 +139,20 @@ function move(newCommand) {
 	});
 	process(anywhere);
 
-	if(!response.length) return false;
+	checkPlayerMoved();
 
 	let compiledResponse = response.join(' ');
+
 	response = [];
 
-	return compiledResponse;
+	return {response: compiledResponse, world: world};
 }
 
 function start() {
-	if(!load) return;
+	if(!world) return;
 	started = true;
 
-	return move(`look ${world['#player'].location}`);
+	return move(`look`);
 }
 
 module.exports = { load, move, start }
-
-fs.readFile('./fateWorld_2018-3-3.ftw', 'utf8', (err, result) => {
-	load(result);
-	start();
-	console.log(move('north'));
-});

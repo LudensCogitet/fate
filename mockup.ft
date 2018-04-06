@@ -16,7 +16,7 @@ place named `pedestal_room`
 			if $cube_in_pedestal$ is `true`
 				travel to `you_win`
 
-		if `#command` is `look pedestal_room`
+		if `#command` is `look`
 			say
 				`You are standing in a small circular room with bare white walls.`
 				if $cube_in_pedestal$ is `false`
@@ -28,15 +28,19 @@ place named `pedestal_room`
 		if `#command` is `_cube pedestal`
 			if $cube_in_pedestal$ is `false`
 				if `#player` has `_cube`
-					say
-						`You place the {cube|_cube} in the depression on the pedestal.`
-						`It slides in easily and clicks into place.`
+					do
+						say
+							`You place the {cube|_cube} in the depression on the pedestal.`
+							`It slides in easily and clicks into place.`
+							set `cube_in_pedestal` to `true`
 
 place named `cube_room`
 	do
+		if `#command` is `south`
+			travel to `pedestal_room`
 		if `_cube` is in `#here`
 			do
-				if `#command` is `look cube_room`
+				if `#command` is `look`
 					say `A small black cube sits in an alcove in this otherwise featureless room.`
 
 				if `#command` is `take cube`
@@ -45,13 +49,14 @@ place named `cube_room`
 						move `_cube` to `#player`
 
 		if `_cube` is not in `#here`
-			do
-				say `An empty alcove is the only notable feature of this otherwise featureless room.`
+			if `#command` is `look`
+				do
+					say `An empty alcove is the only notable feature of this otherwise featureless room.`
 
 
 place named `you_win`
 	do
-		if `#command` is `look you_win`
+		if `#command` is `look`
 			say `YOU WIN!`
 		if `#command` is `north`
 			travel to `pedestal_room`

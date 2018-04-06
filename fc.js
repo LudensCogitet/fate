@@ -174,7 +174,7 @@ function compileVariable(statement, compiled) {
 	if(!variableValue || variableValue.variable)  errorAndExit("Variable must have a value and value cannot be a variable", statement);
 
 	if(!compiled.variables) compiled.variables = {};
-	compiled.variables[variableName.value] = variableValue.value;
+	compiled.variables[variableName.value] = variableValue;
 }
 
 function compileTravel(statement, compiled) {
@@ -236,6 +236,18 @@ function compileAnywhere(statement, compiled) {
 	});
 }
 
+function compileSet(statement, compiled) {
+	if(statement.children) errorAndExit("Set statements cannot have children");
+
+	let variable = captureExpression(statement.text, 'set');
+	if(!variable || variable.variable) errorAndExit("First operand of set statement must be a variable name and not a variable.", statement);
+
+	let value = captureExpression(statement.text, 'to');
+	if(!value) errorAndExit("Set statement must assign a value.", statement);
+
+	compiled.set = [variable, value];
+}
+
 let compile = {
 	"place": 			compilePlace,
 	"do":					compileDo,
@@ -245,6 +257,7 @@ let compile = {
 	"travel":			compileTravel,
 	"say":				compileSay,
 	"move":				compileMove,
+	"set":				compileSet,
 	"#player":		compilePlayer,
 	"#anywhere":	compileAnywhere
 }
