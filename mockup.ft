@@ -10,7 +10,9 @@ variable named `cube_in_pedestal` is `false`
 place named `pedestal_room`
 	do
 		if `#command` is `north`
-			travel to `cube_room`
+			or `#command` is `bacon`
+			then
+				travel to `cube_room`
 
 		if `#command` is `south`
 			if $cube_in_pedestal$ is `true`

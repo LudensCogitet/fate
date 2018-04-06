@@ -126,9 +126,8 @@ function compileDo(statement, compiled) {
 	});
 }
 
-function compileIf(statement, compiled) {
-	if(!statement.children || statement.children.length > 1) errorAndExit(`'If' statements must have one (and no more than one) child.`, statement);
-
+function compileComparison(command, statement) {
+	let {text} = statement;
 	let comparisons = {
 		"is": "eq",
 		"is not": "neq",
@@ -138,9 +137,9 @@ function compileIf(statement, compiled) {
 		"does not have": "nin"						// converted to nin with operands flipped
 	}
 
-	let leftHandOperand = captureExpression(statement.text, 'if');
+	let leftHandOperand = captureExpression(statement.text, command);
 
-	if(!leftHandOperand) errorAndExit(`No left hand operand in 'if' statement.`, statement);
+	if(!leftHandOperand) errorAndExit(`No left hand operand in "${command}" statement.`, statement);
 
 	let rightHandOperand;
 	let operator;
@@ -150,7 +149,8 @@ function compileIf(statement, compiled) {
 		return rightHandOperand;
 	});
 
-	if(!rightHandOperand) errorAndExit(`Missing right hand operand or invalid operator in 'if' statement.`, statement);
+	if(!operator) errorAndExit(`No known operator in "${command}" statement`, statement);
+	if(!rightHandOperand) errorAndExit(`Missing right hand operand or invalid operator in "${command}" statement.`, statement);
 
 	if(operator === 'has' || operator === 'does not have') {
 		let temp = leftHandOperand;
@@ -158,10 +158,36 @@ function compileIf(statement, compiled) {
 		rightHandOperand = temp;
 	}
 
+	return { operator: comparisons[operator], operands: [leftHandOperand, rightHandOperand] };
+}
+
+function compileIf(statement, compiled) {
+	if(!statement.children) errorAndExit(`'If' statements must have at least one child.`, statement);
+
+	let orStatements = statement.children.filter(x => x.text.match(/^or/));
+	let thenStatement = statement.children.find(x => x.text.match(/^then/));
+
+	if(thenStatement && (!thenStatement.children || thenStatement.children.length !== 1))
+		errorAndExit(`"then" statement must have one child and no more`, thenStatement);
+
+	if(orStatements.length && !thenStatement) errorAndExit('"If" statment must have at least one "then" child if "or" children are present.', statement);
+
+	let comparison = compileComparison('if', statement);
+
 	compiled.if = {};
+	compiled.if[comparison.operator] = comparison.operands;
+
+	if(orStatements.length) {
+		compiled.or = orStatements.map(x => {
+			comparison = compileComparison('or', x);
+			let newOr = {};
+			newOr[comparison.operator] = comparison.operands;
+			return newOr;
+		});
+	}
+
 	compiled.then = {};
-	compiled.if[comparisons[operator]] = [leftHandOperand, rightHandOperand];
-	compileStatement(statement.children[0], compiled.then);
+	compileStatement(thenStatement ? thenStatement.children[0] : statement.children[0], compiled.then);
 }
 
 function compileVariable(statement, compiled) {

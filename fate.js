@@ -25,15 +25,23 @@ function resolveOperand(operand) {
 }
 
 function processIf(subject) {
-	if(subject.eq) {
-		return resolveOperand(subject.eq[0]) === resolveOperand(subject.eq[1]);
-	} else if(subject.neq) {
-		return resolveOperand(subject.neq[0]) !== resolveOperand(subject.neq[1]);
-	} else if(subject.in) {
-		return world.things[resolveOperand(subject.in[0])].location === resolveOperand(subject.in[1]);
-	} else if(subject.nin) {
-		return world.things[resolveOperand(subject.nin[0])].location !== resolveOperand(subject.nin[1]);
+	let comparisons = [subject.if];
+	let results = [];
+	if(subject.or) comparisons = comparisons.concat(subject.or);
+
+	for(let comparison of comparisons) {
+		if(comparison.eq) {
+			results.push(resolveOperand(comparison.eq[0]) === resolveOperand(comparison.eq[1]));
+		} else if(comparison.neq) {
+			results.push(resolveOperand(comparison.neq[0]) !== resolveOperand(comparison.neq[1]));
+		} else if(comparison.in) {
+			results.push(world.things[resolveOperand(comparison.in[0])].location === resolveOperand(comparison.in[1]));
+		} else if(comparison.nin) {
+			results.push(world.things[resolveOperand(comparison.nin[0])].location !== resolveOperand(comparison.nin[1]));
+		}
 	}
+
+	return results.some(x => x);
 }
 
 function processDo(subject) {
@@ -83,7 +91,7 @@ function process(subject) {
 
 	if(subject.do)
 		processDo(subject.do);
-	else if(subject.if && processIf(subject.if))
+	else if(subject.if && processIf(subject))
 		process(subject.then);
 	else {
 		for(let action of Object.keys(actions)) {
