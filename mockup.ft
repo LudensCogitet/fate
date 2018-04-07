@@ -1,7 +1,20 @@
+#settings
+	turns happen on input
+	keyword list
+		take
+			synonyms
+				get
+				`pick up`
+		look
+		north
+		south
+		east
+		west
+
 #player is in pedestal_room
 
 #anywhere
-	if $#turns$ is 5
+	if $#turn$ is 5
 		do
 			say `It's been 5 turns`
 
@@ -15,7 +28,7 @@ variable named cube_in_pedestal is false
 place named pedestal_room
 	do
 		if #command is north
-			or #command is `Go to the other room`
+			or #command is `go to the other room`
 			then
 				travel to cube_room
 

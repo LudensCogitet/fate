@@ -5,11 +5,12 @@ let started = false;
 let command;
 let response = [];
 let playerMoved = false;
+let actionTaken = false;
 
 function resolveOperand(operand) {
 	if(!operand.hasOwnProperty('value') && !operand.hasOwnProperty('variable')) return false;
 
-	if(operand.value === '#here') return world['#player'].location;
+	if(operand.value === '#here') return world.things['#player'].location;
 	if(operand.value === '#command') return command;
 	if(operand.value) return operand.value;
 
@@ -44,7 +45,7 @@ function processDo(subject) {
 
 function processTravel(subject) {
 	let newLocation = resolveOperand(subject);
-	world['#player'].location = newLocation;
+	world.things['#player'].location = newLocation;
 	playerMoved = true;
 }
 
@@ -63,17 +64,14 @@ function processMove(subject) {
 	let thing = resolveOperand(subject[0]);
 	let destination = resolveOperand(subject[1]);
 
-	if(thing === '#player')
-		world[thing].location = destination;
-	else
-	 	world.things[thing].location = destination;
+	world.things[thing].location = destination;
 }
 
 function processSet(subject) {
 	world.variables[resolveOperand(subject[0])] = subject[1];
 }
 
-function process(subject) {
+function processAction(subject) {
 	let actions = {
 		"travel": processTravel,
 		"say": processSay,
@@ -81,17 +79,22 @@ function process(subject) {
 		"set": processSet
 	};
 
+	for(let action of Object.keys(actions)) {
+		if(subject[action]) {
+			actionTaken = true;
+			actions[action](subject[action]);
+			break;
+		}
+	}
+}
+
+function process(subject) {
 	if(subject.do)
 		processDo(subject.do);
 	else if(subject.if && processIf(subject))
 		process(subject.then);
 	else {
-		for(let action of Object.keys(actions)) {
-			if(subject[action]) {
-				actions[action](subject[action]);
-				break;
-			}
-		}
+		processAction(subject);
 	}
 }
 
@@ -112,7 +115,11 @@ function checkPlayerMoved() {
 	if(!playerMoved) return;
 	playerMoved = false;
 	command = '#enter';
-	process(world.places[world['#player'].location]);
+	process(world.places[world.things['#player'].location]);
+}
+
+function filterCommand(newCommand) {
+	return newCommand;
 }
 
 function load(worldString) {
@@ -123,13 +130,15 @@ function load(worldString) {
 function move(newCommand) {
 	if(!world || !started) return;
 
-	world.variables['#turns'].value = ((+world.variables['#turns'].value) + 1) + '';
-
-	command = newCommand;
+	if(world.settings.keywords) {
+		command = filterCommand(newCommand);
+	} else {
+		command = newCommand;
+	}
 
 	let anywhere				= world['#anywhere'];
-	let currentPlace 		= world.places[world['#player'].location];
-	let localThings			= getThingsAtLocation(world['#player'].location);
+	let currentPlace 		= world.places[world.things['#player'].location];
+	let localThings			= getThingsAtLocation(world.things['#player'].location);
 	let playerThings		= getThingsAtLocation('#player');
 
 	process(currentPlace);
@@ -147,6 +156,11 @@ function move(newCommand) {
 	let compiledResponse = response.join(' ');
 
 	response = [];
+
+	if((!world.settings.registerTurn || world.settings.registerTurn === 'input') || actionTaken) {
+				actionTaken = false;
+				world.variables['#turn'].value = ((+world.variables['#turn'].value) + 1) + ''
+	}
 
 	return {response: compiledResponse, world: world};
 }

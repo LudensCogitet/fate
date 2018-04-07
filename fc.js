@@ -1,6 +1,16 @@
 let fs = require('fs');
 let util = require('util');
 
+let playerCompiled = false;
+
+let modifiers = [
+	'plus',
+	'minus',
+	'divided by',
+	'multiplied by',
+	'remainer of division by'
+];
+
 function captureExpression(text, symbol = '') {
 	let regex = [
 			new RegExp(`${symbol}\\W\\\`(.*?)\\\``),
@@ -249,9 +259,11 @@ function compilePlayer(statement, compiled) {
 	let location = captureExpression(statement.text, 'is in');
 	if(!location || location.variable) errorAndExit("Player must be initialized with a location and location cannot be a variable");
 
-	if(!compiled['#player']) compiled['#player'] = {};
+	if(!compiled.things) compiled.things = {};
+	compiled.things['#player'] = {};
 
-	compiled['#player'].location = location.value;
+	compiled.things['#player'].location = location.value;
+	playerCompiled = true;
 }
 
 function compileAnywhere(statement, compiled) {
@@ -276,6 +288,42 @@ function compileSet(statement, compiled) {
 	compiled.set = [variable, value];
 }
 
+function compileSettings(statement, compiled) {
+	compiled.settings = {};
+	statement.children.forEach(setting => {
+		let match;
+		match = setting.text.match(/turns happen on (.*)/)
+		if(match && match.length) {
+			if(match[1] !== 'input' && match[1] !== 'command')
+				errorAndExit(`Turns must happen on either "input" or "command"`, statement);
+
+			compiled.settings.registerTurn = match[1];
+			return;
+		}
+
+		match = setting.text.match(/keyword list/);
+		if(match) {
+			setting.children.forEach(keyword => {
+				if(!compiled.settings.keywords) compiled.settings.keywords = [];
+				let keywordObject = {keyword: keyword.text};
+				if(keyword.children && keyword.children[0].text.match(/synonyms/)) {
+					keyword.children[0].children.forEach(x => {
+						if(!keywordObject.synonyms) keywordObject.synonyms = [];
+
+						let synonym;
+						let match = x.text.match(/`(.*?)`/);
+						if(match && match.length) synonym = match[1];
+						else synonym = x.text;
+
+						keywordObject.synonyms.push(synonym);
+					});
+				}
+				compiled.settings.keywords.push(keywordObject);
+			});
+		}
+	});
+}
+
 let compile = {
 	"place": 			compilePlace,
 	"do":					compileDo,
@@ -287,7 +335,8 @@ let compile = {
 	"move":				compileMove,
 	"set":				compileSet,
 	"#player":		compilePlayer,
-	"#anywhere":	compileAnywhere
+	"#anywhere":	compileAnywhere,
+	"#settings":	compileSettings
 }
 
 function compileStatement(statement, compiled) {
@@ -307,7 +356,6 @@ function compileStatement(statement, compiled) {
 }
 
 const worldStructure = {
-	'#player': {},
 	'#anywhere': {},
 	'places': {},
 	'things': {},
@@ -328,11 +376,11 @@ const worldStructure = {
 		compileStatement(statement, compiled);
 	}
 
-	if(!compiled['#player']) errorAndExit(`Player must be initialized with a location. E.g. "#player is in \`room_name\`"`);
+	if(!playerCompiled) errorAndExit(`Player must be initialized with a location. E.g. "#player is in \`room_name\`"`);
 
 	compiled = Object.assign({}, worldStructure, compiled);
 
-	compiled.variables['#turns'] = {value: '-1'};
+	compiled.variables['#turn'] = {value: '-1'};
 
 	console.log(JSON.stringify(compiled));
 
