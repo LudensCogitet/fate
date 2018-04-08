@@ -1,24 +1,30 @@
-let modifiers = {
-	'plus': 'add',
-	'minus': 'subtract',
-	'divided by': 'divide',
-	'multiplied by': 'multiply',
-	'remainder of division by': 'modulo'
-};
+function escapeSymbol(symbol) {
+	return symbol.replace(/\$/g, "\\$").replace(/\|/g, "\\|").trim();
+}
 
-function captureModifier(text, operand) {
+function captureModifier(text, symbol) {
+	symbol = escapeSymbol(symbol);
+	let modifiers = {
+		'plus': 'add',
+		'minus': 'subtract',
+		'divided by': 'divide',
+		'multiplied by': 'multiply',
+		'remainder of division by': 'modulo'
+	};
+
 	for(let modifier of Object.keys(modifiers)) {
-		let match = text.match(new RegExp(`${operand}\\s\(${modifier}.*\)`));
-		if(match && match.length) {
-			return captureExpression(match[1], modifier);
+		let match = text.match(new RegExp(`.*${symbol}\\s${modifier}.*`));
+		if(match) {
+			return {operation: modifiers[modifier], operand: captureExpression(text, modifier)};
 		}
 	}
 }
 
 function captureExpression(text, symbol = '') {
+	symbol = escapeSymbol(symbol);
 	let regex = [
-			new RegExp(`${symbol}\\W\\\`(.*?)\\\``),
-			new RegExp(`${symbol}\\W\\\$(.*?)\\\$`),
+			new RegExp(`${symbol}\\s\\\`(.*?)\\\``),
+			new RegExp(`${symbol}\\s\\\$(.*?)\\\$`),
 			new RegExp("^`(.*?)`"),
 			new RegExp("^\\\$(.*?)\\\$"),
 			new RegExp(`${symbol}\\s(.*?)(\\s|$)`)
@@ -27,9 +33,10 @@ function captureExpression(text, symbol = '') {
 	for(let i = 0; i < regex.length; i++) {
 		let match = text.match(regex[i]);
 		if(match && match.length > 1) {
+			console.log(match)
 			let modifier = captureModifier(text, match[0]);
 			let expression = {};
-			if(modifier) express.modifier = modifier;
+			if(modifier) expression.modifier = modifier;
 
 			switch(i) {
 				case 0:
@@ -48,7 +55,7 @@ function captureExpression(text, symbol = '') {
 	return null;
 }
 
-let phrase = "if #turn (remainder of division by 10) is timeCycleLength (divided by 2)";
+let phrase = "if $#turn$ remainder of division by 5 is 5 divided by 2";
 
 let match = captureExpression(phrase, 'if');
 

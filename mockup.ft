@@ -14,9 +14,9 @@
 #player is in pedestal_room
 
 #anywhere
-	if $#turn$ is 5
+	if $#turn$ remainder of division by 5 is 0
 		do
-			say `It's been 5 turns`
+			say `5 turns have passed`
 
 thing named _cube is in cube_room looks like `A small black {cube|_cube}`
 	do
