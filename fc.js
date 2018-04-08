@@ -199,6 +199,7 @@ function compileIf(statement, compiled) {
 
 	let orStatements = statement.children.filter(x => x.text.match(/^or/));
 	let thenStatement = statement.children.find(x => x.text.match(/^then/));
+	let elseStatement = statement.children.find(x => x.text.match(/^else/));
 
 	if(thenStatement && (!thenStatement.children || thenStatement.children.length !== 1))
 		errorAndExit(`"then" statement must have one child and no more`, thenStatement);
@@ -221,6 +222,11 @@ function compileIf(statement, compiled) {
 
 	compiled.then = {};
 	compileStatement(thenStatement ? thenStatement.children[0] : statement.children[0], compiled.then);
+
+	if(elseStatement) {
+		compiled.else = {};
+		compileStatement(elseStatement.children[0], compiled.else);
+	}
 }
 
 function compileVariable(statement, compiled) {
@@ -322,6 +328,12 @@ function compileSettings(statement, compiled) {
 			return;
 		}
 
+		match = captureExpression(setting.text, 'bad command response');
+
+		if(match) {
+			compiled.settings.onBadCommand = match.value || match.variable;
+		}
+
 		match = setting.text.match(/keyword list/);
 		if(match) {
 			setting.children.forEach(keyword => {
@@ -401,7 +413,7 @@ const worldStructure = {
 
 	compiled = Object.assign({}, worldStructure, compiled);
 
-	compiled.variables['#turn'] = {value: '-1'};
+	compiled.variables['#turn'] = {value: '1'};
 
 	console.log(JSON.stringify(compiled));
 

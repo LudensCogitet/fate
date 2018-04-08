@@ -1,20 +1,65 @@
+let util = require('util');
+
 let pristineWorld;
 let world;
 let started = false;
 
 let command;
 let response = [];
+
 let playerMoved = false;
 let actionTaken = false;
+let objectNames = [];
+
+// 'plus': 'add',
+// 'minus': 'subtract',
+// 'divided by': 'divide',
+// 'multiplied by': 'multiply',
+// 'remainder of division by': 'modulo'
+
+function resolveModifier(subject) {
+	if(!subject.modifier) return subject.value;
+
+	let {operation} = subject.modifier;
+	let operand = resolveOperand(subject.modifier.operand);
+
+	if(operation === 'add')
+		return Number(subject.value) + Number(operand);
+	if(operation === 'subtract')
+		return Number(subject.value) - Number(operand);
+	if(operation === 'divide')
+		return Number(subject.value) / Number(operand);
+	if(operation === 'multiply')
+		return Number(subject.value) * Number(operand);
+	if(operation === 'modulo')
+		return Number(subject.value) % Number(operand);
+}
+
+function resolveValue(operand) {
+	if(operand.value) {
+		let value = Number(operand.value);
+		if(value || value === 0) return value;
+		else {
+			return operand.value;
+		}
+	}
+
+	if(operand.variable) return resolveValue(world.variables[operand.variable]);
+}
 
 function resolveOperand(operand) {
 	if(!operand.hasOwnProperty('value') && !operand.hasOwnProperty('variable')) return false;
 
 	if(operand.value === '#here') return world.things['#player'].location;
 	if(operand.value === '#command') return command;
-	if(operand.value) return operand.value;
 
-	if(operand.variable) return resolveOperand(world.variables[operand.variable]);
+	let resolved = {
+		value: resolveValue(operand)
+	};
+
+	if(operand.modifier) resolved.modifier = operand.modifier;
+
+	return resolveModifier(resolved);
 }
 
 function processIf(subject) {
@@ -91,9 +136,13 @@ function processAction(subject) {
 function process(subject) {
 	if(subject.do)
 		processDo(subject.do);
-	else if(subject.if && processIf(subject))
-		process(subject.then);
-	else {
+	else if(subject.if){
+		if(processIf(subject)) {
+			process(subject.then);
+		} else if(subject.else) {
+			process(subject.else);
+		}
+	} else {
 		processAction(subject);
 	}
 }
@@ -119,12 +168,35 @@ function checkPlayerMoved() {
 }
 
 function filterCommand(newCommand) {
-	return newCommand;
+	if(newCommand === '#enter') return newCommand;
+	let {keywords} = world.settings;
+
+	let words = [];
+
+	keywords.forEach(keyword => {
+		words.push(keyword.keyword);
+		if(keyword.synonyms) {
+			keyword.synonyms.forEach(synonym => {
+				newCommand = newCommand.replace(synonym, keyword.keyword);
+			});
+		}
+	});
+
+	let matches = [];
+
+	words.concat(objectNames).forEach(word => {
+		 let match = newCommand.match(new RegExp(`.*(${word}).*`));
+		 if(match) matches.push(match);
+	});
+
+	return matches.map(x => x[1]).sort((a, b) => newCommand.indexOf(a) - newCommand.indexOf(b)).join(' ');
 }
 
 function load(worldString) {
 	pristineWorld = worldString;
 	world = JSON.parse(worldString);
+
+	objectNames = objectNames.concat(Object.keys(world.things), Object.keys(world.places));
 }
 
 function move(newCommand) {
@@ -153,7 +225,7 @@ function move(newCommand) {
 
 	checkPlayerMoved();
 
-	let compiledResponse = response.join(' ');
+	let compiledResponse = !actionTaken ? world.settings.onBadCommand : response.join(' ');
 
 	response = [];
 

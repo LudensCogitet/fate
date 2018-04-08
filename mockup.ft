@@ -1,5 +1,6 @@
 #settings
 	turns happen on input
+	bad command response `I don't understand`
 	keyword list
 		take
 			synonyms
@@ -10,20 +11,30 @@
 		south
 		east
 		west
+		pedestal
 
 #player is in pedestal_room
 
 #anywhere
-	if $#turn$ remainder of division by 5 is 0
-		do
-			say `5 turns have passed`
+	if $#turn$ remainder of division by $time_cycle_length$ is 0
+		if $time_of_day$ is day
+			do
+				set time_of_day to night
+				say `The morning sun has vanquished the horrible night.`
+			else
+				if $time_of_day$ is night
+					do
+						set time_of_day to day
+						say `What a horrible night to have a curse.`
 
-thing named _cube is in cube_room looks like `A small black {cube|_cube}`
+thing named `strange cube` is in cube_room looks like `A small black {cube|strange cube}`
 	do
-		if #command is `look _cube`
-			say `It's a small matte black {cube|_cube}, perfectly smooth and about 2 inches on a side`
+		if #command is `look strange cube`
+			say `It's a small matte black {cube|strange cube}, perfectly smooth and about 2 inches on a side`
 
 variable named cube_in_pedestal is false
+variable named time_cycle_length is 7
+variable named time_of_day is day
 
 place named pedestal_room
 	do
@@ -44,36 +55,36 @@ place named pedestal_room
 					if $cube_in_pedestal$ is false
 						`In the center of the room is a small, waist-high pedestal with a square depression in the center.`
 					if $cube_in_pedestal$ is true
-						`In the center of the room is a small, waist-high pedestal. A matte black {cube|_cube} sits in a square depression in the center.`
+						`In the center of the room is a small, waist-high pedestal. A matte black {cube|strange cube} sits in a square depression in the center.`
 					`To the north a doorway leads into another small room beyond.`
 
-		if #command is `_cube pedestal`
+		if #command is `strange cube pedestal`
 			if $cube_in_pedestal$ is false
-				if #player has _cube
+				if #player has `strange cube`
 					do
 						say
-							`You place the {cube|_cube} in the depression on the pedestal.`
+							`You place the {cube|strange cube} in the depression on the pedestal.`
 							`It slides in easily and clicks into place.`
 							set cube_in_pedestal to true
-							move _cube to #here
+							move `strange cube` to #here
 
 place named cube_room
 	do
 		if #command is south
 			travel to pedestal_room
-		if _cube is in #here
+		if `strange cube` is in #here
 			do
 				if #command is look
 					or #command is #enter
 					then
-						say `A small black {cube|_cube} sits in an alcove in this otherwise featureless room.`
+						say `A small black {cube|strange cube} sits in an alcove in this otherwise featureless room.`
 
-				if #command is `take _cube`
+				if #command is `take strange cube`
 					do
-						say `You take the {cube|_cube}.`
-						move _cube to #player
+						say `You take the {cube|strange cube}.`
+						move `strange cube` to #player
 
-		if _cube is not in #here
+		if `strange cube` is not in #here
 			if #command is look
 				or #command is #enter
 				then
