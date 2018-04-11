@@ -230,11 +230,12 @@ function move(newCommand) {
 	response = [];
 
 	if((!world.settings.registerTurn || world.settings.registerTurn === 'input') || actionTaken) {
-				actionTaken = false;
 				world.variables['#turn'].value = ((+world.variables['#turn'].value) + 1) + ''
 	}
 
-	return {response: compiledResponse, world: world};
+	let packet = {response: compiledResponse, world: world, actionTaken}
+	actionTaken = false;
+	return packet;
 }
 
 function start() {

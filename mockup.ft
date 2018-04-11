@@ -1,17 +1,5 @@
 #settings
 	turns happen on input
-	bad command response `I don't understand`
-	keyword list
-		take
-			synonyms
-				get
-				`pick up`
-		look
-		north
-		south
-		east
-		west
-		pedestal
 
 #player is in pedestal_room
 
