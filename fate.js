@@ -116,12 +116,21 @@ function processSet(subject) {
 	world.variables[resolveOperand(subject[0])] = subject[1];
 }
 
+function processList(subject) {
+	let location = resolveValue(subject.location);
+	let phrase = resolveValue(subject.phrase);
+	let things = Object.keys(world.things).filter(x => world.things[x].location === location);
+
+	things.forEach(thing => response.push(phrase.replace('#thing', world.things[thing].description)));
+}
+
 function processAction(subject) {
 	let actions = {
 		"travel": processTravel,
 		"say": processSay,
 		"move": processMove,
-		"set": processSet
+		"set": processSet,
+		"list": processList
 	};
 
 	for(let action of Object.keys(actions)) {
@@ -233,7 +242,16 @@ function move(newCommand) {
 				world.variables['#turn'].value = ((+world.variables['#turn'].value) + 1) + ''
 	}
 
-	let packet = {response: compiledResponse, world: world, actionTaken}
+	let packet = {
+		response: compiledResponse,
+		world,
+		currentLocation: {
+			name: world.things['#player'].location,
+			description: resolveValue(world.places[world.things['#player'].location].description)
+		},
+		actionTaken
+	};
+
 	actionTaken = false;
 	return packet;
 }

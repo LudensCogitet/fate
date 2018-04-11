@@ -4,27 +4,30 @@
 #player is in pedestal_room
 
 #anywhere
-	if $#turn$ remainder of division by $time_cycle_length$ is 0
-		if $time_of_day$ is day
-			do
-				set time_of_day to night
-				say `The morning sun has vanquished the horrible night.`
-			else
-				if $time_of_day$ is night
-					do
-						set time_of_day to day
-						say `What a horrible night to have a curse.`
-
-thing named `strange cube` is in cube_room looks like `A small black {cube|strange cube}`
 	do
-		if #command is `look strange cube`
+		if #command is inventory
+			list what #player has saying `You have #thing.`
+		if $#turn$ remainder of division by $time_cycle_length$ is 0
+			if $time_of_day$ is day
+				do
+					set time_of_day to night
+					say `The morning sun has vanquished the horrible night.`
+				else
+					if $time_of_day$ is night
+						do
+							set time_of_day to day
+							say `What a horrible night to have a curse.`
+
+thing named `strange cube` is in cube_room looks like `{a small black cube|strange cube}`
+	do
+		if #command is `examine strange cube`
 			say `It's a small matte black {cube|strange cube}, perfectly smooth and about 2 inches on a side`
 
 variable named cube_in_pedestal is false
 variable named time_cycle_length is 7
 variable named time_of_day is day
 
-place named pedestal_room
+place named pedestal_room looks like `{Pedestal Room|pedestal_room}`
 	do
 		if #command is north
 			or #command is `go to the other room`
@@ -56,7 +59,7 @@ place named pedestal_room
 							set cube_in_pedestal to true
 							move `strange cube` to #here
 
-place named cube_room
+place named cube_room looks like `{Alcove|cube_room}`
 	do
 		if #command is south
 			travel to pedestal_room
@@ -79,7 +82,7 @@ place named cube_room
 					say `An empty alcove is the only notable feature of this otherwise featureless room.`
 
 
-place named you_win
+place named you_win looks like `{You Win!|you_win}`
 	do
 		if #command is look
 			or #command is #enter

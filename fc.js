@@ -112,7 +112,12 @@ function compilePlace(statement, compiled) {
 	let placeName = captureExpression(statement.text, 'named');
 	if(!placeName || placeName.variable) errorAndExit("Place must be named and name must not be a variable", statement);
 
-	let newPlace = {};
+	let placeDescription = captureExpression(statement.text, 'looks like');
+	if(!placeDescription || placeDescription.variable) errorAndExit("A place must have a description and description must not be a variable", statement);
+
+	let newPlace = {
+		description: placeDescription
+	};
 
 	statement.children.forEach(child => {
 		compileStatement(child, newPlace);
@@ -315,6 +320,19 @@ function compileSet(statement, compiled) {
 	compiled.set = [variable, value];
 }
 
+function compileList(statement, compiled) {
+	if(statement.children) errorAndExit("List statements cannot have children");
+
+	let location = captureExpression(statement.text, 'what');
+	if(!location) location = captureExpression(statement.text, 'what is in');
+	if(!location) errorAndExit("List statements must mention a location");
+
+	let phrase = captureExpression(statement.text, 'saying');
+	if(!phrase) errorAndExit("List statements must give a template");
+
+	compiled.list = {location, phrase};
+}
+
 function compileSettings(statement, compiled) {
 	compiled.settings = {};
 	statement.children.forEach(setting => {
@@ -367,6 +385,7 @@ let compile = {
 	"say":				compileSay,
 	"move":				compileMove,
 	"set":				compileSet,
+	"list":				compileList,
 	"#player":		compilePlayer,
 	"#anywhere":	compileAnywhere,
 	"#settings":	compileSettings
