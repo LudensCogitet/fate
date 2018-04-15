@@ -210,12 +210,12 @@ function load(worldString) {
 
 function move(newCommand) {
 	if(!world || !started) return;
-
-	if(world.settings.keywords) {
-		command = filterCommand(newCommand);
-	} else {
-		command = newCommand;
-	}
+	command = newCommand;
+	// if(world.settings.keywords) {
+	// 	command = filterCommand(newCommand);
+	// } else {
+	// 	command = newCommand;
+	// }
 
 	let anywhere				= world['#anywhere'];
 	let currentPlace 		= world.places[world.things['#player'].location];
@@ -239,7 +239,7 @@ function move(newCommand) {
 	response = [];
 
 	if((!world.settings.registerTurn || world.settings.registerTurn === 'input') || actionTaken) {
-				world.variables['#turn'].value = ((+world.variables['#turn'].value) + 1) + ''
+		world.variables['#turn'].value = ((+world.variables['#turn'].value) + 1) + ''
 	}
 
 	let packet = {
@@ -251,7 +251,6 @@ function move(newCommand) {
 		},
 		actionTaken
 	};
-
 	actionTaken = false;
 	return packet;
 }

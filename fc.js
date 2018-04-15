@@ -346,6 +346,13 @@ function compileSettings(statement, compiled) {
 			return;
 		}
 
+		match = setting.text.match(/turns happen every ([0-9]+) commands/);
+
+		if(match && match.length) {
+			compiled.settings.commandsPerTurn = match[1];
+			return;
+		}
+
 		match = captureExpression(setting.text, 'bad command response');
 
 		if(match) {
