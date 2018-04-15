@@ -3,14 +3,14 @@
 	turns happen every 2 commands
 
 	keyword list
+		use
+		examine
+		look around
+		check inventory
 		go north
 		go south
 		go east
 		go west
-		use
-		look around
-		examine
-		check inventory
 
 #player is in pedestal_room
 
