@@ -6,11 +6,11 @@
 		use
 		examine
 		look around
-		check inventory
-		go north
-		go south
-		go east
-		go west
+		{inventory|check inventory}
+		{north|go north}
+		{south|go south}
+		{east|go east}
+		{west|go west}
 
 #player is in pedestal_room
 
