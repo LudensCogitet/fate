@@ -383,6 +383,7 @@ function compileSettings(statement, compiled) {
 }
 
 let compile = {
+	"import":			compileImport,
 	"place": 			compilePlace,
 	"do":					compileDo,
 	"if":					compileIf,
@@ -414,6 +415,15 @@ function compileStatement(statement, compiled) {
 	compile[command](statement, compiled);
 }
 
+function compileImport(statement, compiled) {
+	let filename = captureExpression(statement.text, 'import');
+
+	if(!filename) errorAndExit("No filename specified.", statement);
+	if(filename.variable) errorAndExit("Filename cannot be a variable.", statement);
+
+	compileFile(filename.value, compiled);
+}
+
 const worldStructure = {
 	'#anywhere': {},
 	'places': {},
@@ -421,19 +431,26 @@ const worldStructure = {
 	'variables': {}
 };
 
+function compileFile(filename, compiled) {
+	validateFilePath(filename);
+	console.log(filename);
+	let source = fs.readFileSync(filename, 'utf8');
+	let grouped = groupStatements(source.split('\n'));
+
+	for(let statement of grouped) {
+		compileStatement(statement, compiled);
+	}
+}
+
 (() => {
 	let sourceFile = process.argv[2];
 	validateFilePath(sourceFile);
 
 	let destinationPath = process.argv[3];
 
-	let source = fs.readFileSync(sourceFile, 'utf8');
-	let grouped = groupStatements(source.split('\n'));
 	let compiled = {};
 
-	for(let statement of grouped) {
-		compileStatement(statement, compiled);
-	}
+	compileFile(sourceFile, compiled);
 
 	if(!playerCompiled) errorAndExit(`Player must be initialized with a location. E.g. "#player is in \`room_name\`"`);
 
