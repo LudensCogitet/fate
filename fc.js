@@ -1,7 +1,9 @@
 let fs = require('fs');
+let path = require('path');
 let util = require('util');
 
 let playerCompiled = false;
+let folderPath;
 
 function escapeSymbol(symbol) {
 	return symbol.replace(/\$/g, "\\$").replace(/\|/g, "\\|").trim();
@@ -70,7 +72,7 @@ function errorAndExit(error, statement = null) {
 
 function validateFilePath(sourceFile) {
 	if(!sourceFile || !fs.existsSync(sourceFile)) {
-	  errorAndExit("Bad source file path");
+	  errorAndExit(`Bad source file path: ${sourceFile}`);
 	}
 }
 
@@ -432,8 +434,9 @@ const worldStructure = {
 };
 
 function compileFile(filename, compiled) {
+	filename = path.join(__dirname, folderPath, filename);
 	validateFilePath(filename);
-	console.log(filename);
+
 	let source = fs.readFileSync(filename, 'utf8');
 	let grouped = groupStatements(source.split('\n'));
 
@@ -444,13 +447,22 @@ function compileFile(filename, compiled) {
 
 (() => {
 	let sourceFile = process.argv[2];
-	validateFilePath(sourceFile);
+
+	let parts = sourceFile.split(path.sep);
+	let initScript;
+	if(parts[parts.length -1].indexOf('.ft') === -1) {
+		initScript = 'index.ft';
+	} else {
+		initScript = parts[parts.length -1];
+		parts.pop();
+	}
+	folderPath = parts.join(path.sep);
 
 	let destinationPath = process.argv[3];
 
 	let compiled = {};
 
-	compileFile(sourceFile, compiled);
+	compileFile(initScript, compiled);
 
 	if(!playerCompiled) errorAndExit(`Player must be initialized with a location. E.g. "#player is in \`room_name\`"`);
 
