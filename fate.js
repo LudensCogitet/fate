@@ -18,33 +18,34 @@ let objectNames = [];
 // 'remainder of division by': 'modulo'
 
 function resolveModifier(subject) {
-	if(!subject.modifier) return subject.value;
+	if(!subject.modifier) return resolveValue(subject);
 
 	let {operation} = subject.modifier;
 	let operand = resolveOperand(subject.modifier.operand);
 
 	if(operation === 'add')
-		return Number(subject.value) + Number(operand);
+		return {value: Number(resolveValue(subject)) + Number(operand)};
 	if(operation === 'subtract')
-		return Number(subject.value) - Number(operand);
+		return {value: Number(resolveValue(subject)) - Number(operand)};
 	if(operation === 'divide')
-		return Number(subject.value) / Number(operand);
+		return {value: Number(resolveValue(subject.value)) / Number(operand)};
 	if(operation === 'multiply')
-		return Number(subject.value) * Number(operand);
+		return {value: Number(resolveValue(subject)) * Number(operand)};
 	if(operation === 'modulo')
-		return Number(subject.value) % Number(operand);
+		return {value: Number(resolveValue(subject.value)) % Number(operand)};
 }
 
 function resolveValue(operand) {
-	if(operand.value) {
-		let value = Number(operand.value);
-		if(value || value === 0) return value;
-		else {
-			return operand.value;
-		}
+	if(operand.variable) {
+		return resolveValue(world.variables[operand.variable]);
 	}
 
-	if(operand.variable) return resolveValue(world.variables[operand.variable]);
+	let value = Number(operand.value);
+	if(value || value === 0) {
+		return value;
+	} else {
+		return operand.value;
+	}
 }
 
 function resolveOperand(operand) {
@@ -113,7 +114,7 @@ function processMove(subject) {
 }
 
 function processSet(subject) {
-	world.variables[resolveOperand(subject[0])] = subject[1];
+	world.variables[resolveOperand(subject[0])] = resolveOperand(subject[1]);
 }
 
 function processList(subject) {
@@ -173,6 +174,7 @@ function checkPlayerMoved() {
 	if(!playerMoved) return;
 	playerMoved = false;
 	command = '#enter';
+	response = [];
 	process(world.places[world.things['#player'].location]);
 }
 

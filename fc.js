@@ -93,7 +93,7 @@ function groupStatements(lines) {
 	let statements = [];
 	let currentObjects = [null];
 	assignLayers(lines).forEach((line, i) => {
-		if(!line.text) return;
+		if(!line.text || line.text.slice(0, 2) === '<!') return;
 
 		if(line.layer === 0) {
 			currentObjects[0] = {text: line.text, line: i}
@@ -115,10 +115,10 @@ function compilePlace(statement, compiled) {
 	if(!placeName || placeName.variable) errorAndExit("Place must be named and name must not be a variable", statement);
 
 	let placeDescription = captureExpression(statement.text, 'looks like');
-	if(!placeDescription || placeDescription.variable) errorAndExit("A place must have a description and description must not be a variable", statement);
+	// if(!placeDescription || placeDescription.variable) errorAndExit("A place must have a description and description must not be a variable", statement);
 
 	let newPlace = {
-		description: placeDescription
+		description: placeDescription && placeDescription.value ? placeDescription : ''
 	};
 
 	statement.children.forEach(child => {
@@ -157,7 +157,7 @@ function compileThing(statement, compiled) {
 function compileDo(statement, compiled) {
 	if(!statement.children) errorAndExit("Empty 'do' statement", statement);
 
-	compiled.do = []
+	if(!compiled.do) compiled.do = [];
 
 	statement.children.forEach(child => {
 		let newCommand = {};
@@ -405,6 +405,7 @@ function compileStatement(statement, compiled) {
 	let command = statement.text.split(' ').shift();
 
 	if(!compile[command]) {
+		console.log(statement.text);
 		if(captureExpression(statement.text)) {
 			compile['say'](statement, compiled);
 			return;
@@ -439,10 +440,14 @@ function compileFile(filename, compiled) {
 
 	let source = fs.readFileSync(filename, 'utf8');
 	let grouped = groupStatements(source.split('\n'));
-
+	console.log(grouped);
 	for(let statement of grouped) {
 		compileStatement(statement, compiled);
 	}
+}
+
+function serializeWorldObject(compiled) {
+	return JSON.stringify(compiled).replace(/\\"/g, '\\\\\\"');
 }
 
 (() => {
@@ -469,14 +474,15 @@ function compileFile(filename, compiled) {
 	compiled = Object.assign({}, worldStructure, compiled);
 
 	compiled.variables['#turn'] = {value: '1'};
+	if(!compiled.settings) compiled.settings = {};
 
-	console.log(JSON.stringify(compiled));
+	console.log(serializeWorldObject(compiled));
 
 	if(!destinationPath) {
 		let dateNow = new Date();
 		destinationPath = `./fateWorld_${dateNow.getFullYear()}-${dateNow.getMonth()}-${dateNow.getDate()}.ftw`;
 	}
 
-	fs.writeFileSync(destinationPath, JSON.stringify(compiled));
+	fs.writeFileSync(destinationPath, serializeWorldObject(compiled));
 	process.exit(0);
 })();

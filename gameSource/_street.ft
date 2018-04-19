@@ -1,0 +1,28 @@
+variable named _street_num_turns is 0
+variable named _street_escaped is false
+
+#anywhere
+	do
+		if $_street_escaped$ is false
+			do
+				if $_street_num_turns$ is 3
+					say `<p>The wind is beginning to howl.<p>`
+				if $_street_num_turns$ is 6
+					say `<p>You sense It drawing near.<p>`
+				if $_street_num_turns$ is 9
+					say `<p>"God save me... It's here..."<p>`
+				if $_street_num_turns$ is 10
+					travel to _street_death
+
+place named _street looks like `{A Darkened Street|_street}`
+	do
+		set _street_num_turns to $_street_num_turns$ plus 1
+		if #command is `look around`
+			or #command is #enter
+			then
+				`Great and imposing houses stand back from the pavement to the right and left of the empty street.`
+
+place named _street_death looks like `You have died...`
+	do
+		say `<p>Too long in the open, and without Dr. Sinclar's aid, the horrible shadow has consumed you.<p>`
+		say `(Refresh the page to play again)`

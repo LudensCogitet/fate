@@ -1,2 +1,3 @@
 import `./global.ft`
-import `./mockup.ft`
+import `./_intro.ft`
+import `./_street.ft`
