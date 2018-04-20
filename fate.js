@@ -7,7 +7,7 @@ let started = false;
 let command;
 let response = [];
 
-let playerMoved = false;
+let travelToLocation;
 let actionTaken = false;
 let objectNames = [];
 
@@ -96,9 +96,7 @@ function processDo(subject) {
 }
 
 function processTravel(subject) {
-	let newLocation = resolveOperand(subject);
-	world.things['#player'].location = newLocation;
-	playerMoved = true;
+	travelToLocation = resolveOperand(subject);
 }
 
 function processSay(subject) {
@@ -177,8 +175,9 @@ function getThingsAtLocation(location) {
 }
 
 function checkPlayerMoved() {
-	if(!playerMoved) return;
-	playerMoved = false;
+	if(!travelToLocation) return;
+	world.things['#player'].location = travelToLocation;
+	travelToLocation = null;
 	command = '#enter';
 	let responseCount = response.length;
 	process(world.places[world.things['#player'].location]);
