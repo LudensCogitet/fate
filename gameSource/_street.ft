@@ -1,10 +1,11 @@
 variable named _street_num_turns is 0
-variable named _street_escaped is false
+variable named _street_escaped is null
 
 #anywhere
 	do
 		if $_street_escaped$ is false
 			do
+				set _street_num_turns to $_street_num_turns$ plus 1
 				if $_street_num_turns$ is 3
 					say `<p>The wind is beginning to howl.<p>`
 				if $_street_num_turns$ is 6
@@ -16,11 +17,39 @@ variable named _street_escaped is false
 
 place named _street looks like `{A Darkened Street|_street}`
 	do
-		set _street_num_turns to $_street_num_turns$ plus 1
+		if $_street_escaped$ is null
+			set _street_escaped to false
 		if #command is `look around`
 			or #command is #enter
 			then
-				`Great and imposing houses stand back from the pavement to the right and left of the empty street.`
+				say
+					`Imposing houses, most with light-less windows, stand back from the pavement to the right and left of the empty street.<p>`
+					`You see {a golden plaque|_right_hand_plaque} hanging from the garden wall next to the {gate of the house|_right_hand_gate} to the {east|go east}.<p>`
+					`You see {another plaque|_left_hand_plaque} similarly placed next to {the gate|_left_hand_gate} of the garden wall across the street, to the {west|go west}.<p>`
+					`The street continues {north|go north}, into the dark.`
+		if #command is `examine _left_hand_plaque`
+			`The plaque reads: "380 Mayfair Street"`
+		if #command is `examine _right_hand_plaque`
+			`The plaque reads: "381 Mayfair Street"`
+		if #command is `go east`
+			or #command is `use _right_hand_gate`
+			then
+				`The gate is locked.`
+		if #command is `go west`
+			or #command is `use _left_hand_gate`
+			then
+				`The gate is locked.`
+		if #command is `go north`
+			travel to _street_2
+
+place named _street_2 looks like `{Further along the darkened street|_street_2}`
+	do
+		if #command is `look around`
+			or #command is #enter
+			then
+				say `More houses and stuff`
+		if #command is `go south`
+			travel to _street
 
 place named _street_death looks like `You have died...`
 	do

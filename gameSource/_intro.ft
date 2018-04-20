@@ -3,7 +3,7 @@ place named _intro
 		if #command is #enter
 			do
 				`A shadow hunts you. What had been but a vague and lurking fear, a scratching at the outer wall of the conscious mind,`
-				`become a sudden reality after that terrible ritual. It had been folly to participate, you knew that now. And perhaps it had`
+				`became a sudden reality after that terrible ritual. It had been folly to participate, you knew that now. And perhaps it had`
 				`even been a trap set by Willem to destroy you, or to feed the thing? You could only guess, and there was no time now for guessing.<p>`
 				`Only flight.<p>`
 				`{Continue...|_intro_next 1}`

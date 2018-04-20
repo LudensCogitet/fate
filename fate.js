@@ -24,15 +24,15 @@ function resolveModifier(subject) {
 	let operand = resolveOperand(subject.modifier.operand);
 
 	if(operation === 'add')
-		return {value: Number(resolveValue(subject)) + Number(operand)};
+		return resolveValue(subject) + operand;
 	if(operation === 'subtract')
-		return {value: Number(resolveValue(subject)) - Number(operand)};
+		return resolveValue(subject) - operand;
 	if(operation === 'divide')
-		return {value: Number(resolveValue(subject.value)) / Number(operand)};
+		return resolveValue(subject) / operand;
 	if(operation === 'multiply')
-		return {value: Number(resolveValue(subject)) * Number(operand)};
+		return resolveValue(subject) * operand;
 	if(operation === 'modulo')
-		return {value: Number(resolveValue(subject.value)) % Number(operand)};
+		return resolveValue(subject) % operand;
 }
 
 function resolveValue(operand) {
@@ -61,6 +61,12 @@ function resolveOperand(operand) {
 	if(operand.modifier) resolved.modifier = operand.modifier;
 
 	return resolveModifier(resolved);
+}
+
+function wrapOperand(operand) {
+	if(world.variables[operand]) return {variable: operand};
+
+	return {value: operand};
 }
 
 function processIf(subject) {
@@ -114,7 +120,7 @@ function processMove(subject) {
 }
 
 function processSet(subject) {
-	world.variables[resolveOperand(subject[0])] = resolveOperand(subject[1]);
+	world.variables[resolveOperand(subject[0])] = wrapOperand(resolveOperand(subject[1]));
 }
 
 function processList(subject) {
@@ -174,8 +180,10 @@ function checkPlayerMoved() {
 	if(!playerMoved) return;
 	playerMoved = false;
 	command = '#enter';
-	response = [];
+	let responseCount = response.length;
 	process(world.places[world.things['#player'].location]);
+	let roomResponse = response.splice(responseCount);
+	response = roomResponse.concat(response);
 }
 
 function filterCommand(newCommand) {
