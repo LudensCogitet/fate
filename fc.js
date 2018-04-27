@@ -27,6 +27,12 @@ function captureModifier(text, symbol) {
 	}
 }
 
+function captureKeyword(text) {
+	if(text.indexOf('#interrupt') > -1) {
+		return 'interrupt';
+	}
+}
+
 function captureExpression(text, symbol = '') {
 	symbol = escapeSymbol(symbol);
 	let regex = [
@@ -41,8 +47,10 @@ function captureExpression(text, symbol = '') {
 		let match = text.match(regex[i]);
 		if(match && match.length > 1) {
 			let modifier = captureModifier(text, match[0]);
+			let keyword = captureKeyword(text);
 			let expression = {};
 			if(modifier) expression.modifier = modifier;
+			if(keyword) expression[keyword] = true;
 
 			switch(i) {
 				case 0:
@@ -155,14 +163,37 @@ function compileThing(statement, compiled) {
 }
 
 function compileDo(statement, compiled) {
-	if(!statement.children) errorAndExit("Empty 'do' statement", statement);
+	let functionName = captureExpression(statement.text, 'do');
+	if(functionName) {
+		if(statement.children) errorAndExit("Unreachable inline 'do' commands", statement);
+		compiled.do = {function: functionName};
+		return;
+	}
 
+	if(!statement.children) errorAndExit("Empty 'do' statement", statement);
 	if(!compiled.do) compiled.do = [];
 
 	statement.children.forEach(child => {
 		let newCommand = {};
 		compileStatement(child, newCommand);
 		compiled.do.push(newCommand);
+	});
+}
+
+function compileFunction(statement, compiled) {
+	if(!statement.children) errorAndExit("Empty function statement", statement);
+
+	let functionName = captureExpression(statement.text, 'named');
+	if(!functionName || functionName.variable) errorAndExit("Function must be named and name must not be a variable", statement);
+
+	if(!compiled.functions) compiled.functions = {};
+
+	compiled.functions[functionName.value] = [];
+
+	statement.children.forEach(child => {
+		let newCommand = {};
+		compileStatement(child, newCommand);
+		compiled.functions[functionName.value].push(newCommand);
 	});
 }
 
@@ -310,6 +341,10 @@ function compileAnywhere(statement, compiled) {
 	});
 }
 
+function compileClear(statement, compiled) {
+	compiled.clear = true;
+}
+
 function compileSet(statement, compiled) {
 	if(statement.children) errorAndExit("Set statements cannot have children");
 
@@ -396,6 +431,8 @@ let compile = {
 	"move":				compileMove,
 	"set":				compileSet,
 	"list":				compileList,
+	"function":		compileFunction,
+	"#clear":			compileClear,
 	"#player":		compilePlayer,
 	"#anywhere":	compileAnywhere,
 	"#settings":	compileSettings
@@ -431,7 +468,8 @@ const worldStructure = {
 	'#anywhere': {},
 	'places': {},
 	'things': {},
-	'variables': {}
+	'variables': {},
+	'functions': {}
 };
 
 function compileFile(filename, compiled) {

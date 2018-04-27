@@ -6,6 +6,8 @@ let started = false;
 
 let command;
 let response = [];
+let interrupt;
+
 
 let travelToLocation;
 let actionTaken = false;
@@ -90,7 +92,8 @@ function processIf(subject) {
 }
 
 function processDo(subject) {
-	subject.forEach(x => {
+	let toProcess = subject.function ? world.functions[resolveOperand(subject.function)] : subject;
+	toProcess.forEach(x => {
 		process(x);
 	});
 }
@@ -129,25 +132,32 @@ function processList(subject) {
 	things.forEach(thing => response.push(phrase.replace('#thing', world.things[thing].description)));
 }
 
+function processClear(subject) {
+	response = [];
+}
+
 function processAction(subject) {
 	let actions = {
 		"travel": processTravel,
 		"say": processSay,
 		"move": processMove,
 		"set": processSet,
-		"list": processList
+		"list": processList,
+		"#clear": processClear
 	};
 
 	for(let action of Object.keys(actions)) {
 		if(subject[action]) {
 			actionTaken = true;
 			actions[action](subject[action]);
+			interrupt = subject[action].interrupt;
 			break;
 		}
 	}
 }
 
 function process(subject) {
+	if(interrupt) return;
 	if(subject.do)
 		processDo(subject.do);
 	else if(subject.if){
@@ -176,11 +186,17 @@ function getThingsAtLocation(location) {
 
 function checkPlayerMoved() {
 	if(!travelToLocation) return;
-	world.things['#player'].location = travelToLocation;
-	travelToLocation = null;
-	command = '#enter';
-	let responseCount = response.length;
-	process(world.places[world.things['#player'].location]);
+
+	interrupt = false;
+	let responseCount;
+	while(travelToLocation) {
+		world.things['#player'].location = travelToLocation;
+		travelToLocation = null;
+		command = '#enter';
+		responseCount = response.length;
+		process(world.places[world.things['#player'].location]);
+	}
+	console.log("RESPONSE", response);
 	let roomResponse = response.splice(responseCount);
 	response = roomResponse.concat(response);
 }
@@ -246,6 +262,7 @@ function move(newCommand) {
 	let compiledResponse = !actionTaken ? world.settings.onBadCommand : response.join(' ');
 
 	response = [];
+	interrupt = false;
 
 	if((!world.settings.registerTurn || world.settings.registerTurn === 'input') || actionTaken) {
 		world.variables['#turn'].value = ((+world.variables['#turn'].value) + 1) + ''
