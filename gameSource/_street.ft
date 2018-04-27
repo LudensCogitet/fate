@@ -22,9 +22,9 @@ place named _street looks like `{A Darkened Street|_street}`
 			then
 				say
 					`Imposing houses, most with light-less windows, stand back from the pavement to the right and left of the empty street.<p>`
-					`You see {a golden plaque|_right_hand_plaque} hanging from the garden wall next to the {gate of the house|_right_hand_gate} to the {east|go east}.<p>`
-					`You see {another plaque|_left_hand_plaque} similarly placed next to {the gate|_left_hand_gate} of the garden wall across the street, to the {west|go west}.<p>`
-					`The street continues {north|go north}, into the dark.`
+					`You see {!!a golden plaque|_right_hand_plaque} hanging from the garden wall next to the {!!gate of the house|_right_hand_gate} to the {!!east|go east}.<p>`
+					`You see {!!another plaque|_left_hand_plaque} similarly placed next to {!!the gate|_left_hand_gate} of the garden wall across the street, to the {!!west|go west}.<p>`
+					`The street continues {!!north|go north}, into the dark.`
 		if #command is `examine _left_hand_plaque`
 			`The plaque reads: "380 Mayfair Street"`
 		if #command is `examine _right_hand_plaque`
