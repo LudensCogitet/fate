@@ -13,7 +13,7 @@ function named _street_check_dead
 			#clear
 			travel to _street_death #interrupt
 
-place named _street looks like `{A Darkened Street|_street}`
+place named _street looks like `{A Windy Street|_street}`
 	do
 		if #command is not #enter
 			do _street_check_dead
@@ -21,26 +21,26 @@ place named _street looks like `{A Darkened Street|_street}`
 			or #command is #enter
 			then
 				say
-					`Imposing houses, most with light-less windows, stand back from the pavement to the right and left of the empty street.<p>`
+					`Imposing houses, most with darkened windows, stand back from the pavement to the right and left of the empty street.<p>`
 					`You see {!!a golden plaque|_right_hand_plaque} hanging from the garden wall next to the {!!gate of the house|_right_hand_gate} to the {!!east|go east}.<p>`
-					`You see {!!another plaque|_left_hand_plaque} similarly placed next to {!!the gate|_left_hand_gate} of the garden wall across the street, to the {!!west|go west}.<p>`
+					`You see {!!another plaque|_left_hand_plaque} similarly placed next to {!!the gate|_left_hand_gate} across the street, to the {!!west|go west}.<p>`
 					`The street continues {!!north|go north}, into the dark.`
 		if #command is `examine _left_hand_plaque`
 			`The plaque reads: "380 Mayfair Street"`
 		if #command is `examine _right_hand_plaque`
 			`The plaque reads: "381 Mayfair Street"`
-		if #command is `go east`
-			or #command is `use _right_hand_gate`
-			then
-				`The gate is locked.`
 		if #command is `go west`
+			or #command is `go east`
 			or #command is `use _left_hand_gate`
+			or #command is `use _right_hand_gate`
+			or #command is `examine _left_hand_gate`
+			or #command is `examine _right_hand_gate`
 			then
 				`The gate is locked.`
 		if #command is `go north`
 			travel to _street_2
 
-place named _street_2 looks like `{A Darkened Street 2|_street}`
+place named _street_2 looks like `{Further Down A Windy Street|_street_2}`
 	do
 		if #command is not #enter
 			do _street_check_dead
@@ -48,20 +48,20 @@ place named _street_2 looks like `{A Darkened Street 2|_street}`
 			or #command is #enter
 			then
 				say
-					`Imposing houses, most with light-less windows, stand back from the pavement to the right and left of the empty street.<p>`
-					`You see {a golden plaque|_right_hand_plaque} hanging from the garden wall next to the {gate of the house|_right_hand_gate} to the {east|go east}.<p>`
-					`You see {another plaque|_left_hand_plaque} similarly placed next to {the gate|_left_hand_gate} of the garden wall across the street, to the {west|go west}.<p>`
-					`The street continues {north|go north}, into the dark.`
+					`Two more houses loom out of the darkness of the lonely street.<p>`
+					`You see {!!an address plaque|_right_hand_plaque} by {!!a gate|_right_hand_gate} to the {!!east|go east}.<p>`
+					`And {!!another plaque|_left_hand_plaque} near {!!the gate|_left_hand_gate} to the {!!west|go west}.<p>`
+					`The street continues {!!north|go north}.`
 		if #command is `examine _left_hand_plaque`
 			`The plaque reads: "382 Mayfair Street"`
 		if #command is `examine _right_hand_plaque`
 			`The plaque reads: "383 Mayfair Street"`
-		if #command is `go east`
-			or #command is `use _right_hand_gate`
-			then
-				`The gate is locked.`
 		if #command is `go west`
+			or #command is `go east`
 			or #command is `use _left_hand_gate`
+			or #command is `use _right_hand_gate`
+			or #command is `examine _left_hand_gate`
+			or #command is `examine _right_hand_gate`
 			then
 				`The gate is locked.`
 		if #command is `go north`
@@ -69,7 +69,7 @@ place named _street_2 looks like `{A Darkened Street 2|_street}`
 		if #command is `go south`
 			travel to _street
 
-place named _street_3 looks like `{A Darkened Street 3|_street}`
+place named _street_3 looks like `{The End Of A Windy Street|_street_3}`
 	do
 		if #command is not #enter
 			do _street_check_dead
@@ -77,10 +77,9 @@ place named _street_3 looks like `{A Darkened Street 3|_street}`
 			or #command is #enter
 			then
 				say
-					`Imposing houses, most with light-less windows, stand back from the pavement to the right and left of the empty street.<p>`
-					`You see {a golden plaque|_right_hand_plaque} hanging from the garden wall next to the {gate of the house|_right_hand_gate} to the {east|go east}.<p>`
-					`You see {another plaque|_left_hand_plaque} similarly placed next to {the gate|_left_hand_gate} of the garden wall across the street, to the {west|go west}.<p>`
-					`The street continues {north|go north}, into the dark.`
+					`The street ends here.<p>`
+					`{!!A golden plaque|_right_hand_plaque} hangs near {!!the gate|_right_hand_gate} to the {!!east|go east}.<p>`
+					`{!!Another plaque|_left_hand_plaque} hangs near {!!the gate|_left_hand_gate} to the {!!west|go west}.<p>`
 		if #command is `examine _left_hand_plaque`
 			`The plaque reads: "384 Mayfair Street"`
 		if #command is `examine _right_hand_plaque`
@@ -88,7 +87,9 @@ place named _street_3 looks like `{A Darkened Street 3|_street}`
 		if #command is `go east`
 			or #command is `use _right_hand_gate`
 			then
-				travel to _street_sinclair_front_lawn
+				do
+					#clear
+					travel to _street_sinclair_front_lawn #interrupt
 		if #command is `go west`
 			or #command is `use _left_hand_gate`
 			then
@@ -101,7 +102,7 @@ place named _street_sinclair_front_lawn
 		if #command is #enter
 			`You push open the gate and enter Dr. Sinclair's front garden`
 
-place named _street_death looks like `You have died...`
+place named _street_death looks like `You Have Died`
 	do
 		say `<p>Too long in the open, and without Dr. Sinclar's aid, the horrible shadow has consumed you.<p>`
 		say `(Refresh the page to play again)`
