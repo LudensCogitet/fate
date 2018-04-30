@@ -5,9 +5,12 @@ let world;
 let started = false;
 
 let command;
-let response = [];
-let interrupt;
 
+let response = [];
+let roomEnterResponse = [];
+
+let interrupt;
+let clear;
 
 let travelToLocation;
 let actionTaken = false;
@@ -106,7 +109,7 @@ function processSay(subject) {
 	subject.forEach(x => {
 		let value = resolveOperand(x);
 		if(value) {
-			response.push(value);
+			command === '#enter' ? roomEnterResponse.push(value) : response.push(value);
 			return;
 		}
 		process(x);
@@ -133,6 +136,8 @@ function processList(subject) {
 }
 
 function processClear(subject) {
+	console.log("CLEAR");
+	clear = true;
 	response = [];
 }
 
@@ -143,7 +148,7 @@ function processAction(subject) {
 		"move": processMove,
 		"set": processSet,
 		"list": processList,
-		"#clear": processClear
+		"clear": processClear
 	};
 
 	for(let action of Object.keys(actions)) {
@@ -157,6 +162,7 @@ function processAction(subject) {
 }
 
 function process(subject) {
+	console.log("SUBJECT", subject);
 	if(interrupt) return;
 	if(subject.do)
 		processDo(subject.do);
@@ -188,17 +194,12 @@ function checkPlayerMoved() {
 	if(!travelToLocation) return;
 
 	interrupt = false;
-	let responseCount;
 	while(travelToLocation) {
 		world.things['#player'].location = travelToLocation;
 		travelToLocation = null;
 		command = '#enter';
-		responseCount = response.length;
 		process(world.places[world.things['#player'].location]);
 	}
-	console.log("RESPONSE", response);
-	let roomResponse = response.splice(responseCount);
-	response = roomResponse.concat(response);
 }
 
 function filterCommand(newCommand) {
@@ -259,9 +260,11 @@ function move(newCommand) {
 
 	checkPlayerMoved();
 
+	response = roomEnterResponse.concat(response);
 	let compiledResponse = !actionTaken ? world.settings.onBadCommand : response.join(' ');
 
 	response = [];
+	roomEnterResponse = [];
 	interrupt = false;
 
 	if((!world.settings.registerTurn || world.settings.registerTurn === 'input') || actionTaken) {
@@ -275,8 +278,10 @@ function move(newCommand) {
 			name: world.things['#player'].location,
 			description: resolveValue(world.places[world.things['#player'].location].description)
 		},
-		actionTaken
+		actionTaken,
+		clear
 	};
+	clear = false;
 	actionTaken = false;
 	return packet;
 }

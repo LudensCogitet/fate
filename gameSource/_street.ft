@@ -1,4 +1,5 @@
 variable named _street_num_turns is 0
+variable named _street_entered_lawn is false
 
 function named _street_check_dead
 	set _street_num_turns to $_street_num_turns$ plus 1
@@ -87,20 +88,29 @@ place named _street_3 looks like `{The End Of A Windy Street|_street_3}`
 		if #command is `go east`
 			or #command is `use _right_hand_gate`
 			then
-				do
-					#clear
-					travel to _street_sinclair_front_lawn #interrupt
+				travel to _street_sinclair_front_lawn #interrupt
 		if #command is `go west`
 			or #command is `use _left_hand_gate`
+			or #command is `examine _left_hand_gate`
 			then
 				`The gate is locked.`
 		if #command is `go south`
 			travel to _street_2
 
-place named _street_sinclair_front_lawn
+place named _street_sinclair_front_lawn looks like `{Front Garden|_street_sinclair_front_lawn}`
 	do
 		if #command is #enter
-			`You push open the gate and enter Dr. Sinclair's front garden`
+			or #command is `look around`
+			then
+				do
+					if $_street_entered_lawn$ is false
+						do
+							set _street_entered_lawn to true
+							#clear
+							say `<p>You push open the gate and enter Dr. Sinclair's front garden.<p>`
+					if $_street_entered_lawn$ is true
+						say
+							`A gravel path makes straight for the front door of Dr. Sinclair's house.`
 
 place named _street_death looks like `You Have Died`
 	do
