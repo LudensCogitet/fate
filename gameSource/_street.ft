@@ -109,8 +109,17 @@ place named _street_sinclair_front_lawn looks like `{Front Garden|_street_sincla
 							#clear
 							say `<p>You push open the gate and enter Dr. Sinclair's front garden.<p>`
 					if $_street_entered_lawn$ is true
-						say
-							`A gravel path makes straight for the front door of Dr. Sinclair's house.`
+						`A gravel path leads from the {!!garden gate|_street_garden_gate} to the {!!west|go west} straight to {!!the front door|_street_front_door} of Dr. Sinclair's house to the {!!east|go east}.`
+		if #command is `examine _street_front_door`
+			`The door is slightly ajar.`
+		if #command is `examine _street_garden_gate`
+			`You've shut the gate securely behind you. But how could any mere physical barrier hold back that Horror?`
+		if #command is `go west`
+			`You can sense It's presence just beyond the gate. Terror freezes your blood as you attempt to move toward it. You don't have the strength.`
+		if #command is `use _street_front_door`
+			or #command is `go east`
+			then
+				travel to _house_front_hall
 
 place named _street_death looks like `You Have Died`
 	do

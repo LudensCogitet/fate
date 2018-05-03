@@ -14,7 +14,7 @@
 #anywhere
 	do
 		if #command is `check inventory`
-			list what #player has saying `You have #thing.`
+			list what #player has saying `You have #thing.<p>`
 
 thing named _sinclar_letter looks like `{!!a letter from Dr. Walter Sinclar|_sinclar_letter}` is in #player
 	do
