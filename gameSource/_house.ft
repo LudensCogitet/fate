@@ -25,3 +25,82 @@ place named _house_front_hall looks like `{Front Hall|_house_front_hall}`
 					`<p>The front door is to the {!!west|go west}.<p>`
 		if #command is `go west`
 			travel to _street_sinclair_front_lawn
+		if #command is `go up`
+			travel to _house_upstairs
+
+variable named _mural_puzzle_solved is false
+variable named _mural_sequence is 0
+
+place named _house_upstairs looks like `{Second Floor Hall|_house_upstairs}`
+	do
+		if #command is #enter
+			or #command is `look around`
+			then
+				say
+					`A {massive mural|_mural} covers the wall at the top of stairs: {The night sky|_mural_sky}, filled with strange constellations, stretches above a {tumultuous sea|_mural_sea}.`
+					`On the right, a {flaming red sun|_mural_sun} rises out of the waves. On the left, a {pale yellow moon|_mural_moon} sinks behind the haunting silhouette of an island.`
+					`<p>There are doors to the {!!north|go north} and {!!south|go south}.<p>`
+		if #command is `go north`
+			do
+				if $_mural_puzzle_solved$ is false
+					say `The door has no knob, and it won't budge.`
+				if $_mural_puzzle_solved$ is true
+					travel to _house_laboratory
+		if #command is `go south`
+			say `The door is locked.`
+		if #command is `examine _mural`
+			say `Upon closer inspection, you can see that the mural is made up of several large pieces, some of which are slightly raised.<p>`
+
+		if #command is `use _mural_sky`
+			do
+				say `You push against the starry sky and it gives slightly.`
+				if $_mural_sequence$ is 0
+					then
+						do
+							set _mural_sequence to 1
+							say `You hear a faint click.`
+					else
+						do
+							set _mural_sequence to 0
+							say `You hear a distant clang.`
+		if #command is `use _mural_sea`
+			do
+				say `You push against the raging waves and they gives slightly.`
+				if $_mural_sequence$ is 1
+					then
+						do
+							set _mural_sequence to 2
+							say `You hear a faint click.`
+					else
+						do
+							set _mural_sequence to 0
+							say `You hear a distant clang.`
+		if #command is `use _mural_sun`
+			do
+				say `You push against the burning sun and it gives slightly.`
+				if $_mural_sequence$ is 2
+					then
+						do
+							set _mural_sequence to 3
+							say `You hear a faint click.`
+					else
+						do
+							set _mural_sequence to 0
+							say `You hear a distant clang.`
+		if #command is `use _mural_moon`
+			do
+				say `You push against the pale moon and it gives slightly.`
+				if $_mural_sequence$ is 3
+					then
+						do
+							set _mural_sequence to 4
+							set _mural_puzzle_solved to true
+							say `After a series of tapping sounds, the door to the {!!north|go north} swings open.`
+					else
+						do
+							set _mural_sequence to 0
+							say `You hear a distant clang.`
+
+place named _house_laboratory looks like `To Be Continued...`
+	do
+		say `You enter the shadowy laboratory of Dr. Sinclair...`

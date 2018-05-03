@@ -360,8 +360,8 @@ function compileSet(statement, compiled) {
 function compileList(statement, compiled) {
 	if(statement.children) errorAndExit("List statements cannot have children");
 
-	let location = captureExpression(statement.text, 'what');
-	if(!location) location = captureExpression(statement.text, 'what is in');
+	let location = captureExpression(statement.text, 'what is in');
+	if(!location) location = captureExpression(statement.text, 'what');
 	if(!location) errorAndExit("List statements must mention a location");
 
 	let phrase = captureExpression(statement.text, 'saying');

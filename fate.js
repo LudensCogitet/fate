@@ -128,9 +128,11 @@ function processSet(subject) {
 }
 
 function processList(subject) {
-	let location = resolveValue(subject.location);
-	let phrase = resolveValue(subject.phrase);
-	let things = Object.keys(world.things).filter(x => world.things[x].location === location);
+	let location = resolveOperand(subject.location);
+	let phrase = resolveOperand(subject.phrase);
+	let things = Object.keys(world.things).filter(x => world.things[x].location === location && x !== '#player');
+
+	console.log("THINGS", things);
 
 	things.forEach(thing => response.push(phrase.replace('#thing', world.things[thing].description)));
 }
